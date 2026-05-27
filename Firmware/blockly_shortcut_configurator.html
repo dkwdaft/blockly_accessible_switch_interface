@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blockly Switch Interface Configurator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f4f6fb;
+    --surface:   #eaecf4;
+    --card:      #ffffff;
+    --border:    #d0d5e8;
+    --border2:   #b8bfd6;
+    --accent:    #3d6bff;
+    --accent2:   #0099aa;
+    --warn:      #e03b3b;
+    --text:      #1a1f36;
+    --muted:     #7a82a6;
+    --label:     #4a517a;
+    --drag-over: rgba(61,107,255,0.07);
+    --shadow:    0 1px 3px rgba(30,40,90,0.08), 0 1px 2px rgba(30,40,90,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    max-width: 860px;
+    margin: 0 auto 2rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+  }
+  header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  header p {
+    font-size: 0.77rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    line-height: 1.7;
+  }
+  header a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(61,107,255,0.3);
+    transition: border-color 0.15s;
+  }
+  header a:hover { border-color: var(--accent); }
+  .badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--accent);
+    color: #fff;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+  }
+
+  /* ── OS TOGGLE ───────────────────────────── */
+  .os-bar {
+    max-width: 860px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1.2rem;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+  }
+  .os-bar-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--label);
+    white-space: nowrap;
+  }
+  .os-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .os-toggle input[type="radio"] { display: none; }
+  .os-toggle label {
+    padding: 0.4rem 1.1rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+    white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .os-toggle input[type="radio"]:checked + label {
+    background: var(--accent);
+    color: #fff;
+  }
+  .os-note {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* ── LAYOUT ──────────────────────────────── */
+  .layout {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+  }
+  @media (max-width: 650px) {
+    .layout { grid-template-columns: 1fr; }
+    .os-note { display: none; }
+  }
+
+  /* ── PANEL / CARD ────────────────────────── */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .panel-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.67rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--label);
+    font-weight: 600;
+  }
+  .panel-header .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .panel-body { padding: 1rem; }
+
+  /* ── TIMING INPUTS ───────────────────────── */
+  .timing-grid { display: grid; gap: 0.7rem; }
+  .field-row { display: flex; flex-direction: column; gap: 0.25rem; }
+  .field-row label {
+    font-size: 0.66rem;
+    color: var(--label);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .field-row input[type="number"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.42rem 0.7rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+  }
+  .field-row input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(61,107,255,0.1);
+  }
+  .field-row input[type="number"]::-webkit-inner-spin-button,
+  .field-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  /* ── KEYCODE LIST ────────────────────────── */
+  .full-width { grid-column: 1 / -1; }
+
+  #keycode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 50px;
+  }
+
+  .keycode-item {
+    display: grid;
+    grid-template-columns: 22px 1fr 68px 30px;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    cursor: grab;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .keycode-item:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(61,107,255,0.08);
+  }
+  .keycode-item.dragging { opacity: 0.4; cursor: grabbing; }
+  .keycode-item.drag-over {
+    background: var(--drag-over);
+    border-color: var(--accent);
+  }
+  .keycode-item.is-custom {
+    border-left: 3px solid var(--accent2);
+  }
+
+  .drag-handle {
+    color: var(--muted);
+    font-size: 1rem;
+    cursor: grab;
+    text-align: center;
+  }
+
+  .key-select, .key-text-input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.76rem;
+    padding: 0.3rem 0.4rem;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .key-select:focus, .key-text-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(61,107,255,0.1);
+  }
+
+  .symbol-input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--accent2);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.4rem;
+    width: 100%;
+    text-align: center;
+    transition: border-color 0.15s;
+  }
+  .symbol-input:focus {
+    outline: none;
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(0,153,170,0.1);
+  }
+
+  .icon-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  /* ── COLUMN LABELS ───────────────────────── */
+  .list-labels {
+    display: grid;
+    grid-template-columns: 22px 1fr 68px 30px;
+    gap: 0.4rem;
+    padding: 0 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+  .list-labels span {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .list-labels span:nth-child(3) { text-align: center; }
+
+  /* ── ADD BUTTONS ─────────────────────────── */
+  .add-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: none;
+    border: 1px dashed var(--border2);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.71rem;
+    padding: 0.42rem 0.7rem;
+    cursor: pointer;
+    flex: 1;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(61,107,255,0.04);
+  }
+  .add-btn.custom:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(0,153,170,0.04);
+  }
+
+  /* ── CUSTOM INPUT SECTION ────────────────── */
+  .custom-panel { grid-column: 1 / -1; }
+  .custom-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px auto;
+    gap: 0.6rem;
+    align-items: end;
+  }
+  @media (max-width: 600px) {
+    .custom-form { grid-template-columns: 1fr 1fr; }
+  }
+  .custom-help {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.6rem;
+    line-height: 1.6;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border-radius: 5px;
+    border-left: 2px solid var(--accent2);
+  }
+  .custom-help code {
+    background: var(--border);
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 0.62rem;
+    color: var(--text);
+  }
+  .add-custom-btn {
+    background: var(--accent2);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+    height: 32px;
+    align-self: end;
+  }
+  .add-custom-btn:hover { opacity: 0.85; }
+
+  /* ── REFERENCE TABLE ─────────────────────── */
+  .ref-wrap { max-height: 240px; overflow-y: auto; }
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+  }
+  .ref-table th {
+    background: var(--surface);
+    color: var(--label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.6rem;
+    padding: 0.38rem 0.6rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+  .ref-table td {
+    padding: 0.32rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .ref-table tr:hover td { background: var(--surface); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table td:first-child { color: var(--muted); }
+  .add-ref-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 0.63rem;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: background 0.15s, color 0.15s;
+  }
+  .add-ref-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  /* ── GENERATE / OUTPUT ───────────────────── */
+  .generate-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .gen-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    padding: 0.6rem 1.3rem;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 2px 6px rgba(61,107,255,0.25);
+  }
+  .gen-btn:hover { opacity: 0.88; }
+  .gen-btn:active { transform: scale(0.97); }
+
+  .dl-btn {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    padding: 0.6rem 1.3rem;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s, color 0.15s;
+    display: none;
+  }
+  .dl-btn:hover { background: var(--accent); color: #fff; }
+  .dl-btn.visible { display: inline-block; }
+
+  .output-panel { grid-column: 1 / -1; }
+  #output-code {
+    width: 100%;
+    height: 340px;
+    background: #1a1e2b;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: #a8d8a0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    padding: 1rem;
+    resize: vertical;
+    line-height: 1.65;
+    white-space: pre;
+    overflow: auto;
+    display: none;
+  }
+  #output-code.visible { display: block; }
+
+  /* ── STATUS ──────────────────────────────── */
+  #status { font-size: 0.68rem; color: var(--muted); align-self: center; display: none; }
+  #status.ok  { color: #1a9e6a; display: inline; }
+  #status.err { color: var(--warn); display: inline; }
+
+  .idx { font-size: 0.58rem; color: var(--muted); text-align: center; }
+  .section-divider { grid-column: 1/-1; border: none; border-top: 1px solid var(--border); margin: 0.2rem 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Switch Interface Configurator <span class="badge">config.py</span></h1>
+  <p>
+    Blockly keyboard accessibility · Adafruit Feather ESP32-S3 Rev TFT · CircuitPython HID<br>
+    <a href="https://github.com/loretod/blockly_accessible_switch_interface" target="_blank" rel="noopener">
+      ⎋ github.com/loretod/blockly_accessible_switch_interface
+    </a>
+  </p>
+</header>
+
+<!-- ── OS SELECTOR ── -->
+<div class="os-bar">
+  <span class="os-bar-label">Target OS</span>
+  <div class="os-toggle">
+    <input type="radio" name="os" id="os-mac" value="mac" checked>
+    <label for="os-mac">🍎 macOS</label>
+    <input type="radio" name="os" id="os-win" value="windows">
+    <label for="os-win">🪟 Windows</label>
+  </div>
+  <span class="os-note">Cmd ↔ Ctrl swaps automatically when you switch OS</span>
+</div>
+
+<div class="layout">
+
+  <!-- ── TIMING ── -->
+  <div class="panel">
+    <div class="panel-header"><span class="dot"></span>Single-Switch Timing</div>
+    <div class="panel-body timing-grid">
+      <div class="field-row">
+        <label>Hold to scan (secs)</label>
+        <input type="number" id="hold_to_scan" value="2.0" step="0.1" min="0.1">
+      </div>
+      <div class="field-row">
+        <label>Scan interval (secs)</label>
+        <input type="number" id="scan_interval" value="1.0" step="0.1" min="0.1">
+      </div>
+      <div class="field-row">
+        <label>Max short press (secs)</label>
+        <input type="number" id="max_short_press" value="0.5" step="0.05" min="0.05">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><span class="dot"></span>Two-Switch Timing</div>
+    <div class="panel-body timing-grid">
+      <div class="field-row">
+        <label>Debounce delay (secs)</label>
+        <input type="number" id="debounce" value="0.1" step="0.01" min="0.01">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BLOCKLY REFERENCE TABLE ── -->
+  <div class="panel full-width">
+    <div class="panel-header"><span class="dot"></span>Blockly Shortcut Reference — click + add to include in list</div>
+    <div class="ref-wrap">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th id="ref-key-col">Mac Key</th>
+            <th style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody id="ref-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ACTIVE SHORTCUTS ── -->
+  <div class="panel full-width">
+    <div class="panel-header"><span class="dot"></span>Active Shortcuts — drag to reorder</div>
+    <div class="panel-body">
+      <div class="list-labels">
+        <span>#</span><span>Key / Label</span><span style="text-align:center">Symbol</span><span></span>
+      </div>
+      <div id="keycode-list"></div>
+      <div class="add-row">
+        <button class="add-btn" onclick="addPresetShortcut()">＋ add from presets</button>
+        <button class="add-btn custom" onclick="toggleCustomForm()">＋ custom keypress</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CUSTOM BUILDER ── -->
+  <div class="panel custom-panel" id="custom-panel" style="display:none">
+    <div class="panel-header"><span class="dot" style="background:var(--accent2)"></span>Custom Keypress Builder</div>
+    <div class="panel-body">
+      <div class="custom-form">
+        <div class="field-row">
+          <label>Modifier(s)</label>
+          <select id="custom-mod" class="key-select">
+            <option value="">— none —</option>
+            <option value="LEFT_CONTROL">Ctrl</option>
+            <option value="LEFT_SHIFT">Shift</option>
+            <option value="LEFT_ALT">Alt</option>
+            <option value="LEFT_GUI">Cmd / Win</option>
+            <option value="LEFT_CONTROL,LEFT_SHIFT">Ctrl + Shift</option>
+            <option value="LEFT_CONTROL,LEFT_ALT">Ctrl + Alt</option>
+            <option value="LEFT_GUI,LEFT_SHIFT">Cmd + Shift</option>
+            <option value="LEFT_SHIFT,LEFT_ALT">Shift + Alt</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>Base Key</label>
+          <select id="custom-key" class="key-select">
+            <option value="TAB">Tab</option>
+            <option value="ENTER">Enter</option>
+            <option value="SPACE">Space</option>
+            <option value="BACKSPACE">Backspace</option>
+            <option value="DELETE">Delete</option>
+            <option value="ESCAPE">Escape</option>
+            <option value="RIGHT_ARROW">→ Arrow Right</option>
+            <option value="LEFT_ARROW">← Arrow Left</option>
+            <option value="UP_ARROW">↑ Arrow Up</option>
+            <option value="DOWN_ARROW">↓ Arrow Down</option>
+            <option value="HOME">Home</option><option value="END">End</option>
+            <option value="PAGE_UP">Page Up</option><option value="PAGE_DOWN">Page Down</option>
+            <option value="INSERT">Insert</option>
+            <optgroup label="Letters">
+              <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+              <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+              <option value="G">G</option><option value="H">H</option><option value="I">I</option>
+              <option value="J">J</option><option value="K">K</option><option value="L">L</option>
+              <option value="M">M</option><option value="N">N</option><option value="O">O</option>
+              <option value="P">P</option><option value="Q">Q</option><option value="R">R</option>
+              <option value="S">S</option><option value="T">T</option><option value="U">U</option>
+              <option value="V">V</option><option value="W">W</option><option value="X">X</option>
+              <option value="Y">Y</option><option value="Z">Z</option>
+            </optgroup>
+            <optgroup label="Numbers">
+              <option value="ONE">1</option><option value="TWO">2</option><option value="THREE">3</option>
+              <option value="FOUR">4</option><option value="FIVE">5</option><option value="SIX">6</option>
+              <option value="SEVEN">7</option><option value="EIGHT">8</option><option value="NINE">9</option>
+              <option value="ZERO">0</option>
+            </optgroup>
+            <optgroup label="Function Keys">
+              <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
+              <option value="F4">F4</option><option value="F5">F5</option><option value="F6">F6</option>
+              <option value="F7">F7</option><option value="F8">F8</option><option value="F9">F9</option>
+              <option value="F10">F10</option><option value="F11">F11</option><option value="F12">F12</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field-row">
+          <label>TFT Symbol</label>
+          <input type="text" id="custom-symbol" class="symbol-input" maxlength="4" placeholder="e.g. ⌘Z">
+        </div>
+        <button class="add-custom-btn" onclick="addCustomShortcut()">＋ Add</button>
+      </div>
+      <p class="custom-help">
+        Pick an optional modifier and a base key to build combos like <code>Ctrl+Z</code> (undo) or
+        <code>Cmd+Shift+Z</code> (redo). The TFT symbol shows on the device screen — keep it 1–3 chars.
+        Custom entries (teal border) have an editable label in the active list.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── GENERATE ── -->
+  <hr class="section-divider">
+  <div class="generate-row">
+    <button class="gen-btn" onclick="generateConfig()">▶ Generate config.py</button>
+    <button class="dl-btn" id="dl-btn" onclick="downloadConfig()">↓ Download config.py</button>
+    <span id="status"></span>
+  </div>
+
+  <!-- ── OUTPUT ── -->
+  <div class="panel output-panel">
+    <div class="panel-header"><span class="dot"></span>config.py — preview</div>
+    <div class="panel-body">
+      <textarea id="output-code" readonly spellcheck="false"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── BLOCKLY SHORTCUT DATA (sourced from Blockly_Keyboard_Shortcuts.xlsx) ──
+const BLOCKLY_SHORTCUTS = [
+  { fn:"Move forward",     mac:{label:"tab",           kc:["TAB"]},                                win:{label:"tab",            kc:["TAB"]} },
+  { fn:"Move backward",    mac:{label:"shift+tab",     kc:["LEFT_SHIFT","TAB"]},                   win:{label:"shift+tab",      kc:["LEFT_SHIFT","TAB"]} },
+  { fn:"Confirm",          mac:{label:"enter",         kc:["ENTER"]},                              win:{label:"enter",          kc:["ENTER"]} },
+  { fn:"Cut",              mac:{label:"cmd+x",         kc:["LEFT_GUI","X"]},                       win:{label:"ctrl+x",         kc:["LEFT_CONTROL","X"]} },
+  { fn:"Copy",             mac:{label:"cmd+c",         kc:["LEFT_GUI","C"]},                       win:{label:"ctrl+c",         kc:["LEFT_CONTROL","C"]} },
+  { fn:"Paste",            mac:{label:"cmd+v",         kc:["LEFT_GUI","V"]},                       win:{label:"ctrl+v",         kc:["LEFT_CONTROL","V"]} },
+  { fn:"Undo",             mac:{label:"cmd+z",         kc:["LEFT_GUI","Z"]},                       win:{label:"ctrl+z",         kc:["LEFT_CONTROL","Z"]} },
+  { fn:"Redo",             mac:{label:"cmd+shift+z",   kc:["LEFT_GUI","LEFT_SHIFT","Z"]},          win:{label:"ctrl+shift+z",   kc:["LEFT_CONTROL","LEFT_SHIFT","Z"]} },
+  { fn:"Open menu",        mac:{label:"cmd+enter",     kc:["LEFT_GUI","ENTER"]},                   win:{label:"ctrl+enter",     kc:["LEFT_CONTROL","ENTER"]} },
+  { fn:"Duplicate",        mac:{label:"d",             kc:["D"]},                                  win:{label:"d",              kc:["D"]} },
+  { fn:"Next stack",       mac:{label:"n",             kc:["N"]},                                  win:{label:"n",              kc:["N"]} },
+  { fn:"Previous stack",   mac:{label:"b",             kc:["B"]},                                  win:{label:"b",              kc:["B"]} },
+  { fn:"Workspace",        mac:{label:"w",             kc:["W"]},                                  win:{label:"w",              kc:["W"]} },
+  { fn:"Format",           mac:{label:"f",             kc:["F"]},                                  win:{label:"f",              kc:["F"]} },
+  { fn:"Move right",       mac:{label:"arrow right",   kc:["RIGHT_ARROW"]},                        win:{label:"arrow right",    kc:["RIGHT_ARROW"]} },
+  { fn:"Move left",        mac:{label:"arrow left",    kc:["LEFT_ARROW"]},                         win:{label:"arrow left",     kc:["LEFT_ARROW"]} },
+  { fn:"Move up",          mac:{label:"arrow up",      kc:["UP_ARROW"]},                           win:{label:"arrow up",       kc:["UP_ARROW"]} },
+  { fn:"Move down",        mac:{label:"arrow down",    kc:["DOWN_ARROW"]},                         win:{label:"arrow down",     kc:["DOWN_ARROW"]} },
+  { fn:"Move mode",        mac:{label:"m",             kc:["M"]},                                  win:{label:"m",              kc:["M"]} },
+  { fn:"Disconnect block", mac:{label:"x",             kc:["X"]},                                  win:{label:"x",              kc:["X"]} },
+  { fn:"Remove block",     mac:{label:"delete",        kc:["DELETE"]},                             win:{label:"delete",         kc:["DELETE"]} },
+  { fn:"Toolbox",          mac:{label:"t",             kc:["T"]},                                  win:{label:"t",              kc:["T"]} },
+  { fn:"Area menu",        mac:{label:"cmd+b",         kc:["LEFT_GUI","B"]},                       win:{label:"ctrl+b",         kc:["LEFT_CONTROL","B"]} },
+  { fn:"Header area",      mac:{label:"1",             kc:["ONE"]},                                win:{label:"1",              kc:["ONE"]} },
+  { fn:"Simulator area",   mac:{label:"2",             kc:["TWO"]},                                win:{label:"2",              kc:["TWO"]} },
+  { fn:"Toolbox area",     mac:{label:"3",             kc:["THREE"]},                              win:{label:"3",              kc:["THREE"]} },
+  { fn:"Workspace area",   mac:{label:"4",             kc:["FOUR"]},                               win:{label:"4",              kc:["FOUR"]} },
+  { fn:"Download area",    mac:{label:"5",             kc:["FIVE"]},                               win:{label:"5",              kc:["FIVE"]} },
+];
+
+// ── DEFAULT ACTIVE SHORTCUTS ───────────────────────────────────────────────
+let shortcuts = [
+  { label:"tab",         kc:["TAB"],         symbol:"→", custom:false },
+  { label:"arrow right", kc:["RIGHT_ARROW"], symbol:"R", custom:false },
+  { label:"arrow down",  kc:["DOWN_ARROW"],  symbol:"D", custom:false },
+  { label:"enter",       kc:["ENTER"],       symbol:"e", custom:false },
+  { label:"arrow left",  kc:["LEFT_ARROW"],  symbol:"L", custom:false },
+  { label:"arrow up",    kc:["UP_ARROW"],    symbol:"U", custom:false },
+  { label:"delete",      kc:["DELETE"],      symbol:"x", custom:false },
+  { label:"w",           kc:["W"],           symbol:"W", custom:false },
+  { label:"t",           kc:["T"],           symbol:"T", custom:false },
+];
+
+let dragSrcIdx = null;
+let currentOS  = 'mac';
+
+// ── OS TOGGLE ──────────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="os"]').forEach(r => {
+  r.addEventListener('change', () => {
+    currentOS = r.value;
+    document.getElementById('ref-key-col').textContent =
+      currentOS === 'mac' ? 'Mac Key' : 'Windows Key';
+    renderRefTable();
+  });
+});
+
+// ── REFERENCE TABLE ────────────────────────────────────────────────────────
+function renderRefTable() {
+  const tbody = document.getElementById('ref-body');
+  tbody.innerHTML = '';
+  BLOCKLY_SHORTCUTS.forEach((sc, i) => {
+    const osData = currentOS === 'mac' ? sc.mac : sc.win;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${sc.fn}</td>
+      <td><kbd style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:0.7rem;font-family:'IBM Plex Mono',monospace;color:var(--text)">${osData.label}</kbd></td>
+      <td><button class="add-ref-btn" data-idx="${i}">＋ add</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.add-ref-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sc = BLOCKLY_SHORTCUTS[parseInt(btn.dataset.idx)];
+      const d  = currentOS === 'mac' ? sc.mac : sc.win;
+      const sym = d.label.split('+').pop().trim().slice(0,3).toUpperCase();
+      shortcuts.push({ label: d.label, kc: [...d.kc], symbol: sym, custom: false });
+      renderList();
+      document.getElementById('keycode-list').lastElementChild
+        ?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      setStatus('ok', `✓ Added "${sc.fn}"`);
+    });
+  });
+}
+
+// ── ACTIVE LIST ────────────────────────────────────────────────────────────
+function renderList() {
+  const list = document.getElementById('keycode-list');
+  list.innerHTML = '';
+  shortcuts.forEach((sc, i) => {
+    const row = document.createElement('div');
+    row.className = 'keycode-item' + (sc.custom ? ' is-custom' : '');
+    row.draggable = true;
+
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+
+    const idx = document.createElement('span');
+    idx.className = 'idx';
+    idx.textContent = i;
+
+    let keyEl;
+    if (sc.custom) {
+      keyEl = document.createElement('input');
+      keyEl.type = 'text';
+      keyEl.className = 'key-text-input';
+      keyEl.value = sc.label;
+      keyEl.addEventListener('input', () => { shortcuts[i].label = keyEl.value; });
+    } else {
+      keyEl = document.createElement('span');
+      keyEl.style.cssText = 'font-size:0.75rem;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+      keyEl.textContent = sc.label;
+      keyEl.title = sc.kc.map(k => 'Keycode.'+k).join(', ');
+    }
+
+    const sym = document.createElement('input');
+    sym.type = 'text';
+    sym.className = 'symbol-input';
+    sym.maxLength = 4;
+    sym.value = sc.symbol;
+    sym.title = 'TFT display symbol';
+    sym.addEventListener('input', () => { shortcuts[i].symbol = sym.value; });
+
+    const del = document.createElement('button');
+    del.className = 'icon-btn';
+    del.title = 'Remove';
+    del.textContent = '✕';
+    del.addEventListener('click', () => { shortcuts.splice(i,1); renderList(); });
+
+    row.append(handle, keyEl, sym, del);
+
+    row.addEventListener('dragstart', e => { dragSrcIdx=i; row.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); document.querySelectorAll('.keycode-item').forEach(r=>r.classList.remove('drag-over')); });
+    row.addEventListener('dragover',  e => { e.preventDefault(); document.querySelectorAll('.keycode-item').forEach(r=>r.classList.remove('drag-over')); row.classList.add('drag-over'); });
+    row.addEventListener('drop',      e => { e.preventDefault(); if(dragSrcIdx!==null && dragSrcIdx!==i){ const m=shortcuts.splice(dragSrcIdx,1)[0]; shortcuts.splice(i,0,m); renderList(); } });
+
+    list.appendChild(row);
+  });
+}
+
+// ── ADD PRESET ─────────────────────────────────────────────────────────────
+function addPresetShortcut() {
+  const sc = BLOCKLY_SHORTCUTS[0];
+  const d  = currentOS === 'mac' ? sc.mac : sc.win;
+  shortcuts.push({ label: d.label, kc: [...d.kc], symbol: d.label[0].toUpperCase(), custom: false });
+  renderList();
+}
+
+// ── CUSTOM FORM ────────────────────────────────────────────────────────────
+function toggleCustomForm() {
+  const p = document.getElementById('custom-panel');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+}
+
+const KEY_LABEL_MAP = {
+  TAB:'tab', ENTER:'enter', SPACE:'space', BACKSPACE:'backspace', DELETE:'delete',
+  ESCAPE:'esc', RIGHT_ARROW:'→', LEFT_ARROW:'←', UP_ARROW:'↑', DOWN_ARROW:'↓',
+  HOME:'home', END:'end', PAGE_UP:'pgup', PAGE_DOWN:'pgdn', INSERT:'ins',
+  ONE:'1',TWO:'2',THREE:'3',FOUR:'4',FIVE:'5',SIX:'6',SEVEN:'7',EIGHT:'8',NINE:'9',ZERO:'0',
+};
+const MOD_LABEL_MAP = {
+  LEFT_CONTROL:'ctrl', LEFT_SHIFT:'shift', LEFT_ALT:'alt', LEFT_GUI:'cmd'
+};
+
+function addCustomShortcut() {
+  const modVal = document.getElementById('custom-mod').value;
+  const keyVal = document.getElementById('custom-key').value;
+  const symVal = document.getElementById('custom-symbol').value;
+
+  const mods    = modVal ? modVal.split(',') : [];
+  const kc      = [...mods, keyVal];
+  const modStr  = mods.map(m => MOD_LABEL_MAP[m] || m.toLowerCase()).join('+');
+  const keyStr  = KEY_LABEL_MAP[keyVal] || keyVal.toLowerCase();
+  const label   = modStr ? `${modStr}+${keyStr}` : keyStr;
+  const symbol  = symVal || keyStr.slice(0,3).toUpperCase();
+
+  shortcuts.push({ label, kc, symbol, custom: true });
+  renderList();
+  document.getElementById('custom-symbol').value = '';
+  document.getElementById('keycode-list').lastElementChild
+    ?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  setStatus('ok', `✓ Added custom: ${label}`);
+}
+
+// ── GENERATE ───────────────────────────────────────────────────────────────
+function generateConfig() {
+  const hold       = parseFloat(document.getElementById('hold_to_scan').value)    || 2.0;
+  const scan       = parseFloat(document.getElementById('scan_interval').value)   || 1.0;
+  const shortPress = parseFloat(document.getElementById('max_short_press').value) || 0.5;
+  const debounce   = parseFloat(document.getElementById('debounce').value)        || 0.1;
+
+  if (!shortcuts.length) { setStatus('err','⚠ Add at least one shortcut.'); return; }
+
+  const osLabel = currentOS === 'mac' ? 'macOS' : 'Windows';
+  const ts      = new Date().toISOString().replace('T',' ').split('.')[0] + ' UTC';
+
+  const kcLines  = shortcuts.map(sc => {
+    const codes = sc.kc.map(k => `Keycode.${k}`).join(', ');
+    return `    ("${sc.label.replace(/'/g,"\\'")}",  [${codes}]),`;
+  }).join('\n');
+
+  const symLines = shortcuts.map(sc =>
+    `    "${sc.label.replace(/'/g,"\\'")}": "${(sc.symbol||'?').replace(/"/g,'\\"')}",`
+  ).join('\n');
+
+  const out =
+`# config.py — Blockly Switch Interface Configuration
+# Generated by Blockly Shortcut Configurator
+# ${ts}  |  OS: ${osLabel}
+#
+# Copy this file to your CircuitPython CIRCUITPY drive.
+# It is imported by code.py to override the defaults.
+#
+# ─────────────────────────────────────────────────────
+# USAGE IN code.py (place AFTER KEYCODES / KEY_SYMBOLS):
+#   try:
+#       from config import *
+#   except ImportError:
+#       pass   # use defaults if config.py is missing
+# ─────────────────────────────────────────────────────
+
+# ── SINGLE-SWITCH TIMING ─────────────────────────────
+
+HOLD_TO_SCAN_SECS   = ${hold.toFixed(1)}
+SCAN_INTERVAL_SECS  = ${scan.toFixed(1)}
+MAX_SHORT_PRESS_SECS = ${shortPress.toFixed(2)}
+
+# ── TWO-SWITCH TIMING ────────────────────────────────
+
+DEBOUNCE_TIME = ${debounce.toFixed(2)}
+
+# ── KEYBOARD SHORTCUTS (${osLabel}) ──────────────────
+# Order = scan / navigation sequence.
+# Multi-key combos: list modifiers first.
+# e.g. ("cmd+z", [Keycode.LEFT_GUI, Keycode.Z])
+
+from adafruit_hid.keycode import Keycode
+
+KEYCODES = [
+${kcLines}
+]
+
+# ── TFT DISPLAY SYMBOLS ──────────────────────────────
+# Shown on the 240×135 TFT. Keep to 1–3 characters.
+
+KEY_SYMBOLS = {
+${symLines}
+}
+`;
+
+  const ta = document.getElementById('output-code');
+  ta.value = out;
+  ta.classList.add('visible');
+  document.getElementById('dl-btn').classList.add('visible');
+  setStatus('ok', `✓ ${shortcuts.length} shortcut${shortcuts.length!==1?'s':''} · ${osLabel} — ready`);
+}
+
+// ── DOWNLOAD ───────────────────────────────────────────────────────────────
+function downloadConfig() {
+  const c = document.getElementById('output-code').value;
+  if (!c) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([c],{type:'text/plain'}));
+  a.download = 'config.py';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus('ok','✓ config.py downloaded');
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────────────
+function setStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = type;
+  el.textContent = msg;
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+renderRefTable();
+renderList();
+</script>
+</body>
+</html>

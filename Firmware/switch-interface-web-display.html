@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Switch Interface Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #000000;
+      --surface:    #0d0d0d;
+      --border:     #2a2a2a;
+      --border-hi:  #444444;
+      --text:       #ffffff;
+      --dim:        #888888;
+      --accent:     #ffb300;
+      --accent-dim: #7a5500;
+      --green:      #00e676;
+      --red:        #ff1744;
+      --blue:       #00b0ff;
+      --sent-bg:    #1a3300;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      line-height: 1.4;
+      overflow: hidden;
+    }
+
+    /* ── TOP NAV ─────────────────────────────────────────── */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .nav-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border: 2px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tab-btn.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #000;
+    }
+
+    .nav-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--dim);
+      transition: background 0.3s;
+    }
+    .status-dot.connected   { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .status-dot.advertising { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .status-dot.error       { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+    .status-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      min-width: 96px;
+    }
+
+    .connect-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border: 2px solid var(--green);
+      background: transparent;
+      color: var(--green);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .connect-btn:hover {
+      background: var(--green);
+      color: #000;
+    }
+
+    .connect-btn.disconnect {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .connect-btn.disconnect:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* TTS toggle */
+    .tts-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border: 2px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tts-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .tts-btn.on {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #000;
+    }
+
+    /* ── LAYOUT ──────────────────────────────────────────── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow: hidden;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TAB 1: DISPLAY ──────────────────────────────────── */
+    #tab-display {
+      flex-direction: column;
+    }
+
+    .display-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px 12px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .mode-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      flex-shrink: 0;
+    }
+
+    .mode-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .mode-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+
+    /* Current + Next side by side */
+    .key-panels {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .key-panel {
+      display: flex;
+      flex-direction: column;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .key-panel.current {
+      border-color: var(--border-hi);
+    }
+
+    .key-panel.flash-sent {
+      border-color: var(--green) !important;
+      background: var(--sent-bg) !important;
+    }
+
+    /* ── SCANNING STATE ──────────────────────────────────── */
+    .key-panel.scanning {
+      border-color: var(--blue) !important;
+      animation: scan-pulse 0.9s ease-in-out infinite;
+    }
+
+    @keyframes scan-pulse {
+      0%, 100% { box-shadow: 0 0 0px 0px rgba(0,176,255,0.0),  inset 0 0 0px  0px rgba(0,176,255,0.0); }
+      50%       { box-shadow: 0 0 22px 4px rgba(0,176,255,0.55), inset 0 0 28px 0px rgba(0,176,255,0.12); }
+    }
+
+    .key-panel.scanning .key-panel-label {
+      color: var(--blue) !important;
+      border-bottom-color: #003860 !important;
+    }
+
+    .key-panel.scanning .key-symbol {
+      color: var(--blue) !important;
+    }
+
+    /* Scanning ticker bar — thin progress strip at top of panel */
+    .scan-bar {
+      position: absolute;
+      top: 0; left: 0;
+      height: 4px;
+      width: 0%;
+      background: var(--blue);
+      transition: none;
+      z-index: 2;
+    }
+
+    .key-panel.scanning .scan-bar {
+      animation: scan-bar-fill var(--scan-interval, 1s) linear infinite;
+    }
+
+    @keyframes scan-bar-fill {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+
+    /* Scanning badge in the mode bar */
+    .scan-badge {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      color: var(--blue);
+    }
+
+    .scan-badge.visible { display: flex; }
+
+    .scan-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      animation: blink 0.9s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.15; }
+    }
+
+    .key-panel-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 10px 16px 6px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .key-panel.current .key-panel-label {
+      color: var(--accent);
+      border-bottom-color: var(--accent-dim);
+    }
+
+    .key-panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      gap: 8px;
+    }
+
+    .key-symbol {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 14vw, 10rem);
+      line-height: 0.9;
+      color: var(--text);
+      transition: color 0.2s;
+      text-align: center;
+    }
+
+    .key-panel.flash-sent .key-symbol {
+      color: var(--green);
+    }
+
+    .key-panel.next .key-symbol {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      color: var(--dim);
+    }
+
+    .key-name {
+      font-size: clamp(0.7rem, 1.8vw, 1.1rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-align: center;
+    }
+
+    .key-panel.current .key-name {
+      color: var(--text);
+      font-size: clamp(0.85rem, 2vw, 1.3rem);
+    }
+
+    .sent-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 6vw, 4rem);
+      letter-spacing: 0.2em;
+      color: var(--green);
+      background: rgba(0,0,0,0.85);
+      padding: 10px 28px;
+      border: 3px solid var(--green);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .sent-badge.visible {
+      opacity: 1;
+    }
+
+    /* Serial log */
+    .log-section {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .log-toggle {
+      width: 100%;
+      padding: 6px 16px;
+      background: transparent;
+      border: none;
+      color: var(--dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.15s;
+    }
+
+    .log-toggle:hover { color: var(--text); }
+
+    .log-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+    .log-toggle.open .arrow { transform: rotate(90deg); }
+
+    .log-body {
+      height: 0;
+      overflow: hidden;
+      transition: height 0.2s;
+    }
+
+    .log-body.open {
+      height: 120px;
+    }
+
+    .log-lines {
+      height: 120px;
+      overflow-y: auto;
+      padding: 6px 16px 8px;
+      font-size: 0.68rem;
+      color: var(--dim);
+      line-height: 1.6;
+      scroll-behavior: smooth;
+    }
+
+    .log-lines .log-event  { color: var(--green); }
+    .log-lines .log-scan   { color: var(--blue); }
+    .log-lines .log-error  { color: var(--red); }
+    .log-lines .log-mode   { color: var(--accent); }
+
+    /* No-serial notice */
+    .no-serial-notice {
+      display: none;
+      margin: 8px 20px;
+      padding: 10px 14px;
+      background: rgba(255, 179, 0, 0.08);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+      flex-shrink: 0;
+    }
+
+    /* ── TAB 2: INPUT ────────────────────────────────────── */
+    #tab-input {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .input-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 20px;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    .last-key-panel {
+      flex: 1;
+      border: 2px solid var(--border-hi);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      cursor: text;
+      min-height: 0;
+    }
+
+    .last-key-panel:focus-within {
+      border-color: var(--accent);
+    }
+
+    .last-key-header {
+      padding: 10px 16px 6px;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-bottom: 1px solid var(--accent-dim);
+      flex-shrink: 0;
+    }
+
+    .last-key-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .last-key-symbol {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 18vw, 14rem);
+      line-height: 0.85;
+      color: var(--text);
+      transition: color 0.1s, transform 0.1s;
+      text-align: center;
+      user-select: none;
+    }
+
+    .last-key-symbol.flash {
+      color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .last-key-name {
+      font-size: clamp(1rem, 2.5vw, 1.6rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-align: center;
+      user-select: none;
+    }
+
+    .focus-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(0,0,0,0.7);
+      transition: opacity 0.2s;
+    }
+
+    .focus-hint.hidden { opacity: 0; pointer-events: none; }
+
+    .focus-hint-icon {
+      font-size: 3rem;
+    }
+
+    .focus-hint-text {
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    /* The hidden textarea that captures actual keystrokes */
+    #hidden-input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    /* Text output area */
+    .text-output-panel {
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      background: var(--surface);
+    }
+
+    .text-output-header {
+      padding: 8px 16px 5px;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clear-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .clear-btn:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    #text-output {
+      width: 100%;
+      height: 80px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      resize: none;
+      outline: none;
+      line-height: 1.4;
+    }
+
+    /* Settings panel */
+    .settings-section {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .settings-toggle {
+      background: transparent;
+      border: none;
+      color: var(--dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.15s;
+      padding: 0;
+    }
+
+    .settings-toggle:hover { color: var(--accent); }
+    .settings-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+    .settings-toggle.open .arrow { transform: rotate(90deg); }
+
+    .settings-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s;
+    }
+
+    .settings-body.open { max-height: 300px; }
+
+    .settings-content {
+      padding-top: 12px;
+    }
+
+    .settings-note {
+      font-size: 0.65rem;
+      color: var(--dim);
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    #keycodes-editor {
+      width: 100%;
+      height: 130px;
+      background: #080808;
+      border: 1px solid var(--border);
+      color: var(--green);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      padding: 8px 12px;
+      resize: none;
+      outline: none;
+      line-height: 1.7;
+    }
+
+    #keycodes-editor:focus { border-color: var(--border-hi); }
+
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .apply-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .apply-btn:hover { background: var(--accent); color: #000; }
+
+    .reset-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+    /* Placeholder state */
+    .placeholder-glyph {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 14vw, 10rem);
+      line-height: 0.9;
+      color: var(--border-hi);
+    }
+    .placeholder-name {
+      font-size: clamp(0.85rem, 2vw, 1.3rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--border-hi);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .key-panels { grid-template-columns: 1fr; grid-template-rows: 3fr 1fr; }
+      .nav-title { font-size: 1.1rem; }
+    }
+
+    /* Announce-only for screen readers */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── NAV ── -->
+  <nav class="nav">
+    <span class="nav-title">Switch Interface</span>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('display')" id="btn-display">Display</button>
+      <button class="tab-btn"        onclick="switchTab('input')"   id="btn-input">Input</button>
+    </div>
+
+    <div class="nav-status">
+      <button class="tts-btn" id="tts-btn" onclick="toggleTTS()" title="Text-to-speech feedback">
+        <span id="tts-icon">🔇</span> TTS
+      </button>
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-label" id="status-label">Not connected</span>
+      <button class="connect-btn" id="connect-btn" onclick="toggleConnection()">Connect</button>
+    </div>
+  </nav>
+
+  <!-- ── TAB 1: DISPLAY ── -->
+  <div class="tab-content active" id="tab-display">
+
+    <div id="no-serial-notice" class="no-serial-notice">
+      ⚠ Web Serial is not supported in this browser. Use Chrome or Edge and open this file
+      from a local server or file:// URL. Once connected, the display will update
+      automatically from serial output. The Input tab works in all browsers.
+    </div>
+
+    <div class="display-main">
+
+      <div class="mode-bar">
+        <span class="mode-label">Mode</span>
+        <span class="mode-value" id="mode-value">–</span>
+        <div class="scan-badge" id="scan-badge">
+          <div class="scan-dot"></div>
+          <span>Scanning</span>
+        </div>
+        <span class="mode-label" style="margin-left:auto">Index</span>
+        <span class="mode-value" id="index-value">–</span>
+      </div>
+
+      <div class="key-panels">
+
+        <!-- Current key -->
+        <div class="key-panel current" id="current-panel">
+          <div class="scan-bar" id="scan-bar"></div>
+          <div class="key-panel-label">Current</div>
+          <div class="key-panel-body">
+            <div class="key-symbol placeholder-glyph" id="current-symbol">–</div>
+            <div class="key-name placeholder-name"   id="current-name">Waiting for device…</div>
+          </div>
+          <div class="sent-badge" id="sent-badge">SENT</div>
+        </div>
+
+        <!-- Next key -->
+        <div class="key-panel next" id="next-panel">
+          <div class="key-panel-label">Next</div>
+          <div class="key-panel-body">
+            <div class="key-symbol" id="next-symbol" style="color:var(--border-hi); font-size:clamp(2.5rem,5vw,4rem)">–</div>
+            <div class="key-name"   id="next-name"   style="color:var(--border-hi)">–</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /.display-main -->
+
+    <!-- Log -->
+    <div class="log-section">
+      <button class="log-toggle" id="log-toggle" onclick="toggleLog()">
+        <span class="arrow">▶</span> Serial Log
+        <span id="log-count" style="color:var(--dim); margin-left:6px">(0 lines)</span>
+      </button>
+      <div class="log-body" id="log-body">
+        <div class="log-lines" id="log-lines"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-section">
+      <button class="settings-toggle" id="settings-toggle" onclick="toggleSettings()">
+        <span class="arrow">▶</span> Keycode List (must match device)
+      </button>
+      <div class="settings-body" id="settings-body">
+        <div class="settings-content">
+          <div class="settings-note">
+            One entry per line: <code style="color:var(--accent)">name | SYMBOL | Label</code>.
+            Must match the KEYCODES order in code.py exactly.
+          </div>
+          <textarea id="keycodes-editor"></textarea>
+          <div class="settings-actions">
+            <button class="apply-btn" onclick="applyKeycodes()">Apply</button>
+            <button class="reset-btn" onclick="resetKeycodes()">Reset to defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#tab-display -->
+
+  <!-- ── TAB 2: INPUT ── -->
+  <div class="tab-content" id="tab-input">
+    <div class="input-main">
+
+      <div class="last-key-panel" id="last-key-panel" onclick="focusInput()">
+        <div class="last-key-header">Last Received Keypress</div>
+        <div class="last-key-body">
+          <div class="last-key-symbol" id="last-key-symbol">–</div>
+          <div class="last-key-name"   id="last-key-name">Click here to capture keypresses</div>
+        </div>
+        <div class="focus-hint" id="focus-hint" onclick="focusInput()">
+          <div class="focus-hint-icon">⌨</div>
+          <div class="focus-hint-text">Click to enable keyboard capture</div>
+        </div>
+      </div>
+
+      <div class="text-output-panel">
+        <div class="text-output-header">
+          <span>Text output</span>
+          <button class="clear-btn" onclick="clearOutput()">Clear</button>
+        </div>
+        <textarea id="text-output" readonly placeholder="Text typed via switch interface will appear here…"></textarea>
+      </div>
+
+    </div>
+  </div><!-- /#tab-input -->
+
+  <!-- Hidden real input capture -->
+  <input id="hidden-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-hidden="true">
+  <div aria-live="polite" aria-atomic="true" class="sr-only" id="sr-announce"></div>
+
+</div><!-- /.app -->
+
+<script>
+// ================================================================
+//  DEFAULT KEYCODES — must match KEYCODES list in code.py
+// ================================================================
+
+const DEFAULT_KEYCODES = [
+  { name: "arrow right", symbol: "→", label: "Right Arrow" },
+  { name: "arrow down",  symbol: "↓", label: "Down Arrow"  },
+  { name: "enter",       symbol: "⏎", label: "Enter"       },
+  { name: "arrow left",  symbol: "←", label: "Left Arrow"  },
+  { name: "arrow up",    symbol: "↑", label: "Up Arrow"    },
+  { name: "delete",      symbol: "⌦", label: "Delete"      },
+  { name: "w",           symbol: "W", label: "W"           },
+  { name: "t",           symbol: "T", label: "T"           },
+];
+
+let KEYCODES = [...DEFAULT_KEYCODES];
+
+// Keyboard key → display symbol / name for the Input tab
+const KEY_DISPLAY = {
+  "ArrowRight":  { symbol: "→", label: "Right Arrow" },
+  "ArrowLeft":   { symbol: "←", label: "Left Arrow"  },
+  "ArrowDown":   { symbol: "↓", label: "Down Arrow"  },
+  "ArrowUp":     { symbol: "↑", label: "Up Arrow"    },
+  "Enter":       { symbol: "⏎", label: "Enter"       },
+  "Backspace":   { symbol: "⌫", label: "Backspace"   },
+  "Delete":      { symbol: "⌦", label: "Delete"      },
+  "Tab":         { symbol: "⇥", label: "Tab"         },
+  "Escape":      { symbol: "⎋", label: "Escape"      },
+  "Home":        { symbol: "⇱", label: "Home"        },
+  "End":         { symbol: "⇲", label: "End"         },
+  "PageUp":      { symbol: "⇞", label: "Page Up"     },
+  "PageDown":    { symbol: "⇟", label: "Page Down"   },
+  " ":           { symbol: "⎵", label: "Space"       },
+};
+
+// ================================================================
+//  STATE
+// ================================================================
+
+let currentIndex = 0;
+let serialPort   = null;
+let serialReader = null;
+let reading      = false;
+let lineBuffer   = "";
+let logCount     = 0;
+let currentMode  = "–";
+let isScanning   = false;
+
+// ================================================================
+//  TEXT-TO-SPEECH
+// ================================================================
+
+let ttsEnabled = false;
+const synth    = window.speechSynthesis;
+
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  const btn  = document.getElementById('tts-btn');
+  const icon = document.getElementById('tts-icon');
+  btn.classList.toggle('on', ttsEnabled);
+  icon.textContent = ttsEnabled ? '🔊' : '🔇';
+  if (ttsEnabled) speak('Text to speech on');
+}
+
+function speak(text, priority) {
+  if (!ttsEnabled && !priority) return;
+  if (!synth) return;
+  synth.cancel();
+  const utt  = new SpeechSynthesisUtterance(text.toLowerCase());
+  utt.rate   = 1.1;
+  utt.pitch  = 1.0;
+  utt.volume = 1.0;
+  synth.speak(utt);
+}
+
+// ================================================================
+//  AUDIO BEEP (Web Audio API)
+// ================================================================
+
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playBeep() {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type      = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch (e) { /* AudioContext blocked until user gesture — silently ignore */ }
+}
+
+// Scanning start chime — rising two-tone
+function playScanStart() {
+  try {
+    const ctx  = getAudioCtx();
+    [440, 660].forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.15);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.18);
+    });
+  } catch (e) {}
+}
+
+// ================================================================
+//  SCANNING VISUAL STATE
+// ================================================================
+
+// Read the configured scan interval from the settings editor and
+// sync it to the CSS variable so the scan-bar animation matches.
+function getScanIntervalSecs() {
+  // Try to parse from the keycodes editor label (not available here),
+  // so we just use a sensible default of 1 s — matching code.py default.
+  return 1.0;
+}
+
+function setScanningState(active) {
+  if (isScanning === active) return;
+  isScanning = active;
+  const panel = document.getElementById('current-panel');
+  const badge = document.getElementById('scan-badge');
+  if (active) {
+    // Sync bar animation duration to scan interval
+    panel.style.setProperty('--scan-interval', getScanIntervalSecs() + 's');
+    panel.classList.add('scanning');
+    badge.classList.add('visible');
+    playScanStart();
+    speak('Scanning');
+  } else {
+    panel.classList.remove('scanning');
+    badge.classList.remove('visible');
+  }
+}
+
+// ================================================================
+//  TAB SWITCHING
+// ================================================================
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.getElementById(`btn-${name}`).classList.add('active');
+}
+
+// ================================================================
+//  WEB SERIAL
+// ================================================================
+
+const supportsSerial = 'serial' in navigator;
+
+if (!supportsSerial) {
+  document.getElementById('no-serial-notice').style.display = 'block';
+  document.getElementById('connect-btn').disabled = true;
+  document.getElementById('connect-btn').style.opacity = '0.3';
+}
+
+function setStatus(state, label) {
+  const dot  = document.getElementById('status-dot');
+  const lbl  = document.getElementById('status-label');
+  const btn  = document.getElementById('connect-btn');
+  dot.className = 'status-dot ' + (state || '');
+  lbl.textContent = label;
+  if (state === 'connected') {
+    btn.textContent = 'Disconnect';
+    btn.className = 'connect-btn disconnect';
+  } else {
+    btn.textContent = 'Connect';
+    btn.className = 'connect-btn';
+  }
+}
+
+async function toggleConnection() {
+  if (serialPort) {
+    await disconnectSerial();
+  } else {
+    await connectSerial();
+  }
+}
+
+async function connectSerial() {
+  if (!supportsSerial) return;
+  try {
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 115200 });
+    setStatus('connected', 'Connected');
+    addLog('Serial port opened', 'log-mode');
+    readLoop();
+  } catch (e) {
+    if (e.name !== 'NotFoundError') {
+      setStatus('error', 'Error');
+      addLog('Connect error: ' + e.message, 'log-error');
+    }
+    serialPort = null;
+  }
+}
+
+async function disconnectSerial() {
+  reading = false;
+  if (serialReader) {
+    try { await serialReader.cancel(); } catch(_) {}
+    serialReader = null;
+  }
+  if (serialPort) {
+    try { await serialPort.close(); } catch(_) {}
+    serialPort = null;
+  }
+  setStatus('', 'Disconnected');
+  addLog('Serial port closed', 'log-mode');
+}
+
+async function readLoop() {
+  reading = true;
+  const decoder = new TextDecoder();
+  while (serialPort && serialPort.readable && reading) {
+    serialReader = serialPort.readable.getReader();
+    try {
+      while (reading) {
+        const { value, done } = await serialReader.read();
+        if (done) break;
+        const text = decoder.decode(value, { stream: true });
+        lineBuffer += text;
+        const lines = lineBuffer.split('\n');
+        lineBuffer = lines.pop(); // keep incomplete line
+        for (const line of lines) {
+          parseLine(line);
+        }
+      }
+    } catch (e) {
+      if (reading) {
+        setStatus('error', 'Read error');
+        addLog('Read error: ' + e.message, 'log-error');
+      }
+    } finally {
+      serialReader.releaseLock();
+    }
+  }
+}
+
+// ================================================================
+//  SERIAL LINE PARSER
+// ================================================================
+
+function parseLine(raw) {
+  const line = raw.trim();
+  if (!line) return;
+
+  // Navigate event
+  let m = line.match(/EVENT: Navigate → (.+)/);
+  if (m) {
+    setScanningState(false);
+    setCurrentKey(m[1].trim());
+    addLog(line, 'log-event');
+    return;
+  }
+
+  // Scan advance
+  m = line.match(/SCAN: → (.+)/);
+  if (m) {
+    setScanningState(true);
+    setCurrentKey(m[1].trim());
+    addLog(line, 'log-scan');
+    return;
+  }
+
+  // Hold → start scanning (before first advance tick)
+  if (/Hold threshold → start scanning/.test(line)) {
+    setScanningState(true);
+    addLog(line, 'log-scan');
+    return;
+  }
+
+  // Sent event
+  m = line.match(/EVENT: Sent: (.+)/);
+  if (m) {
+    setScanningState(false);
+    flashSent();
+    playBeep();
+    addLog(line, 'log-event');
+    return;
+  }
+
+  // Short press select (single-switch, non-scan)
+  if (/Short press/.test(line) && /select/.test(line)) {
+    setScanningState(false);
+    addLog(line, 'log-event');
+    return;
+  }
+
+  // Mode changes
+  if (/Two-Switch Mode/.test(line)) {
+    setMode('Two-Switch');
+    addLog(line, 'log-mode');
+    return;
+  }
+  if (/Single-Switch Mode/.test(line)) {
+    setMode('Single-Switch / Scanning');
+    addLog(line, 'log-mode');
+    return;
+  }
+  if (/MODE SELECT/.test(line)) {
+    setMode('Menu – Select Mode');
+    addLog(line, 'log-mode');
+    return;
+  }
+
+  // BLE status
+  if (/BLE: Connected/.test(line))    { addLog(line, 'log-event'); return; }
+  if (/BLE: Disconnected/.test(line)) { addLog(line, 'log-error'); return; }
+
+  // Everything else — log quietly
+  addLog(line);
+}
+
+function setCurrentKey(keyName) {
+  const idx = KEYCODES.findIndex(k => k.name === keyName);
+  if (idx !== -1) {
+    currentIndex = idx;
+    updateDisplay();
+    // TTS: read out the key label
+    speak(KEYCODES[idx].label);
+  } else {
+    document.getElementById('current-symbol').textContent = keyName.slice(0, 3).toUpperCase();
+    document.getElementById('current-name').textContent   = keyName;
+    document.getElementById('next-symbol').textContent    = '–';
+    document.getElementById('next-name').textContent      = '–';
+    speak(keyName);
+  }
+  document.getElementById('index-value').textContent = idx !== -1 ? `${idx + 1} / ${KEYCODES.length}` : '?';
+  announce(`Current key: ${keyName}`);
+}
+
+function updateDisplay() {
+  const cur  = KEYCODES[currentIndex];
+  const next = KEYCODES[(currentIndex + 1) % KEYCODES.length];
+  if (!cur) return;
+
+  const curSym  = document.getElementById('current-symbol');
+  const curName = document.getElementById('current-name');
+  const nxtSym  = document.getElementById('next-symbol');
+  const nxtName = document.getElementById('next-name');
+
+  curSym.textContent  = cur.symbol;
+  curName.textContent = cur.label;
+  nxtSym.textContent  = next.symbol;
+  nxtName.textContent = next.label;
+
+  // Remove placeholder styling
+  curSym.classList.remove('placeholder-glyph');
+  curName.classList.remove('placeholder-name');
+  nxtSym.style.color  = '';
+  nxtName.style.color = '';
+}
+
+let sentFlashTimer = null;
+function flashSent() {
+  const panel = document.getElementById('current-panel');
+  const badge = document.getElementById('sent-badge');
+  panel.classList.add('flash-sent');
+  badge.classList.add('visible');
+  if (sentFlashTimer) clearTimeout(sentFlashTimer);
+  sentFlashTimer = setTimeout(() => {
+    panel.classList.remove('flash-sent');
+    badge.classList.remove('visible');
+  }, 600);
+  announce('Sent!');
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-value').textContent = mode;
+}
+
+// ================================================================
+//  LOG
+// ================================================================
+
+function addLog(text, cls) {
+  const container = document.getElementById('log-lines');
+  const line = document.createElement('div');
+  line.textContent = text;
+  if (cls) line.className = cls;
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+  logCount++;
+  document.getElementById('log-count').textContent = `(${logCount} lines)`;
+  // Keep log trimmed
+  while (container.children.length > 300) {
+    container.removeChild(container.firstChild);
+  }
+}
+
+function toggleLog() {
+  const body   = document.getElementById('log-body');
+  const toggle = document.getElementById('log-toggle');
+  const open   = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+// ================================================================
+//  SETTINGS / KEYCODES EDITOR
+// ================================================================
+
+function kecodeListToText(list) {
+  return list.map(k => `${k.name} | ${k.symbol} | ${k.label}`).join('\n');
+}
+
+function initKeycodeEditor() {
+  document.getElementById('keycodes-editor').value = kecodeListToText(KEYCODES);
+}
+
+function applyKeycodes() {
+  const lines = document.getElementById('keycodes-editor').value.trim().split('\n');
+  const parsed = [];
+  for (const line of lines) {
+    const parts = line.split('|').map(s => s.trim());
+    if (parts.length >= 3 && parts[0]) {
+      parsed.push({ name: parts[0], symbol: parts[1] || '?', label: parts[2] || parts[0] });
+    }
+  }
+  if (parsed.length === 0) {
+    alert('No valid keycodes found. Format: name | SYMBOL | Label');
+    return;
+  }
+  KEYCODES = parsed;
+  currentIndex = Math.min(currentIndex, KEYCODES.length - 1);
+  updateDisplay();
+  addLog(`Keycode list updated: ${KEYCODES.length} entries`, 'log-mode');
+}
+
+function resetKeycodes() {
+  KEYCODES = [...DEFAULT_KEYCODES];
+  document.getElementById('keycodes-editor').value = kecodeListToText(KEYCODES);
+  updateDisplay();
+}
+
+function toggleSettings() {
+  const body   = document.getElementById('settings-body');
+  const toggle = document.getElementById('settings-toggle');
+  const open   = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+// ================================================================
+//  INPUT TAB — keypress capture
+// ================================================================
+
+const hiddenInput = document.getElementById('hidden-input');
+let inputFocused  = false;
+
+function focusInput() {
+  hiddenInput.focus();
+}
+
+hiddenInput.addEventListener('focus', () => {
+  inputFocused = true;
+  document.getElementById('focus-hint').classList.add('hidden');
+});
+
+hiddenInput.addEventListener('blur', () => {
+  inputFocused = false;
+  document.getElementById('focus-hint').classList.remove('hidden');
+});
+
+hiddenInput.addEventListener('keydown', (e) => {
+  e.preventDefault();
+
+  const symEl  = document.getElementById('last-key-symbol');
+  const nameEl = document.getElementById('last-key-name');
+
+  let symbol, label;
+
+  if (KEY_DISPLAY[e.key]) {
+    symbol = KEY_DISPLAY[e.key].symbol;
+    label  = KEY_DISPLAY[e.key].label;
+  } else if (e.key.length === 1) {
+    symbol = e.key.toUpperCase();
+    label  = `Key: ${e.key.toUpperCase()}`;
+  } else {
+    symbol = e.key.slice(0, 4).toUpperCase();
+    label  = e.key;
+  }
+
+  symEl.textContent  = symbol;
+  nameEl.textContent = label;
+
+  // Beep feedback
+  playBeep();
+
+  // Flash animation
+  symEl.classList.remove('flash');
+  void symEl.offsetWidth; // reflow
+  symEl.classList.add('flash');
+  setTimeout(() => symEl.classList.remove('flash'), 180);
+
+  // Append to text output for printable chars
+  if (e.key === 'Enter') {
+    appendOutput('\n');
+  } else if (e.key === 'Backspace') {
+    deleteLastChar();
+  } else if (e.key.length === 1) {
+    appendOutput(e.key);
+  }
+
+  announce(`Key received: ${label}`);
+});
+
+function appendOutput(char) {
+  const ta = document.getElementById('text-output');
+  ta.value += char;
+  ta.scrollTop = ta.scrollHeight;
+}
+
+function deleteLastChar() {
+  const ta = document.getElementById('text-output');
+  ta.value = ta.value.slice(0, -1);
+}
+
+function clearOutput() {
+  document.getElementById('text-output').value = '';
+  document.getElementById('last-key-symbol').textContent = '–';
+  document.getElementById('last-key-name').textContent   = 'Click here to capture keypresses';
+}
+
+// ================================================================
+//  SCREEN READER ANNOUNCE
+// ================================================================
+
+let announceTimer = null;
+function announce(msg) {
+  const el = document.getElementById('sr-announce');
+  el.textContent = '';
+  clearTimeout(announceTimer);
+  announceTimer = setTimeout(() => { el.textContent = msg; }, 50);
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+
+initKeycodeEditor();
+
+// Show initial placeholder display with first key
+updateDisplay();
+document.getElementById('current-symbol').classList.add('placeholder-glyph');
+document.getElementById('current-name').classList.add('placeholder-name');
+document.getElementById('current-name').textContent = 'Waiting for device…';
+document.getElementById('next-symbol').style.color  = 'var(--border-hi)';
+document.getElementById('next-name').style.color    = 'var(--border-hi)';
+
+</script>
+</body>
+</html>
