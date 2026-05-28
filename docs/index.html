@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blockly Accessible Switch Interface (BASI)</title>
+<meta name="description" content="Open-source hardware and software bringing keyboard accessibility to Blockly via customisable switch interfaces on Adafruit Feather ESP32-S3.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="basi-shared.css">
+<style>
+/* ── HERO ──────────────────────────────────────────────────── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - var(--nav-h));
+  border-bottom: 2px solid var(--ink);
+}
+.hero-text {
+  padding: 5rem 3rem 4rem 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 2px solid var(--ink);
+}
+.hero-eyebrow {
+  font-family: var(--ff-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 2rem;
+  height: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+.hero-title {
+  font-family: var(--ff-head);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 5vw, 4.4rem);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+.hero-title em { font-style: normal; color: var(--accent); }
+.hero-desc {
+  font-size: var(--text-lg);
+  color: var(--ink2);
+  line-height: 1.75;
+  max-width: 44ch;
+  margin-bottom: 2.5rem;
+}
+.hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.hero-visual {
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(192,57,10,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(192,57,10,0.09) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.device-card {
+  position: relative;
+  z-index: 1;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 2rem;
+  background: rgba(255,255,255,0.04);
+  width: 100%;
+  max-width: 340px;
+}
+.device-screen {
+  background: #003399;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  height: 90px;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.device-screen-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.device-screen-divider { background: rgba(255,255,255,0.3); }
+.device-screen-label {
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+}
+.device-screen-key {
+  font-family: var(--ff-head);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: #fff;
+}
+.device-keys {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.device-key {
+  font-family: var(--ff-mono);
+  font-size: var(--text-sm);
+  padding: 0.3rem 0.65rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  color: rgba(255,255,255,0.7);
+}
+.device-tag {
+  margin-top: 1.25rem;
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── FEATURES STRIP ─────────────────────────────────────────── */
+.features-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 2px solid var(--ink);
+}
+.feature-cell {
+  padding: 2.5rem 1.75rem;
+  border-right: 1px solid var(--rule);
+}
+.feature-cell:last-child { border-right: none; }
+.feature-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.9rem;
+  display: block;
+}
+.feature-title {
+  font-family: var(--ff-head);
+  font-weight: 700;
+  font-size: var(--text-xl);
+  margin-bottom: 0.6rem;
+}
+.feature-desc {
+  font-size: var(--text-base);
+  color: var(--ink2);
+  line-height: 1.7;
+}
+
+/* ── PAGE SECTIONS ───────────────────────────────────────────── */
+.page-section {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  border-bottom: 2px solid var(--ink);
+  min-height: 440px;
+}
+.page-section-sidebar {
+  border-right: 2px solid var(--ink);
+  padding: 3rem 2rem;
+  background: var(--tag-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.page-section-num {
+  font-family: var(--ff-mono);
+  font-size: 3.5rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--rule);
+  margin-bottom: 1.5rem;
+}
+.page-section-name {
+  font-family: var(--ff-head);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+.page-section-desc {
+  font-size: var(--text-base);
+  color: var(--ink2);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+.page-section-link {
+  font-family: var(--ff-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--surface);
+  background: var(--ink);
+  text-decoration: none;
+  padding: 0.85rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  transition: background var(--trans);
+  align-self: flex-start;
+  border-radius: var(--radius);
+}
+.page-section-link:hover { background: var(--accent); color: #fff; }
+.page-section-content {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* ── PARTS GRID ─────────────────────────────────────────────── */
+.parts-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; }
+.part-chip {
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--surface);
+}
+.part-chip-icon  { font-size: 1.2rem; flex-shrink: 0; line-height: 1.3; }
+.part-chip-name  { font-family: var(--ff-mono); font-size: var(--text-sm); line-height: 1.5; }
+.part-chip-sub   { font-size: var(--text-xs); color: var(--ink3); display: block; margin-top: 0.1rem; }
+
+/* ── DISPLAY PREVIEW ─────────────────────────────────────────── */
+.display-preview  { border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; max-width: 360px; }
+.display-preview-bar {
+  background: var(--ink);
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dp-dot { width: 9px; height: 9px; border-radius: 50%; }
+.display-preview-body {
+  background: #0d0d0d;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dp-key-main {
+  flex: 3;
+  background: #1a1a6a;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-head);
+  font-weight: 800;
+  font-size: 3rem;
+  color: #fff;
+}
+.dp-key-next {
+  flex: 1;
+  background: #222;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 3px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-head);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #555;
+}
+
+/* ── CONFIG PREVIEW ─────────────────────────────────────────── */
+.config-preview {
+  background: var(--surface);
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 420px;
+}
+.config-preview-header {
+  background: var(--tag-bg);
+  padding: 0.65rem 1rem;
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  color: var(--ink3);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--rule);
+}
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.config-row:last-child { border-bottom: none; }
+.config-drag { color: var(--ink3); font-size: 0.95rem; }
+.config-key  { font-family: var(--ff-mono); font-size: var(--text-sm); flex: 1; }
+.config-sym  {
+  font-family: var(--ff-mono);
+  font-size: var(--text-sm);
+  color: var(--accent2);
+  background: #eef2ff;
+  padding: 0.15rem 0.55rem;
+  border-radius: 2px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.section-label {
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero-text { border-right: none; border-bottom: 2px solid var(--ink); padding: 3rem 1.5rem; }
+  .hero-visual { padding: 2.5rem 1.5rem; }
+  .features-strip { grid-template-columns: 1fr 1fr; }
+  .feature-cell:nth-child(2) { border-right: none; }
+  .feature-cell:nth-child(3),
+  .feature-cell:nth-child(4) { border-top: 1px solid var(--rule); }
+  .feature-cell:nth-child(4) { border-right: none; }
+  .page-section { grid-template-columns: 1fr; }
+  .page-section-sidebar { border-right: none; border-bottom: 2px solid var(--ink); }
+  .page-section-content { padding: 2rem 1.5rem; }
+}
+@media (max-width: 560px) {
+  .features-strip { grid-template-columns: 1fr; }
+  .feature-cell { border-right: none; border-bottom: 1px solid var(--rule); }
+  .parts-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header role="banner">
+  <nav class="site-nav" aria-label="Site navigation">
+    <a href="index.html" class="nav-logo" aria-label="Blockly Accessible Switch Interface – home">BASI<span>.</span></a>
+    <ul class="nav-links" role="list">
+      <li><a href="index.html" aria-current="page">Home</a></li>
+      <li><a href="build.html">Build</a></li>
+      <li><a href="switch-interface-web-display.html">Display</a></li>
+      <li><a href="blockly_shortcut_configurator.html">Configure</a></li>
+    </ul>
+    <a href="https://github.com/loretod/blockly_accessible_switch_interface"
+       class="nav-gh" target="_blank" rel="noopener"
+       aria-label="View source on GitHub (opens in new tab)">↗ GitHub</a>
+  </nav>
+</header>
+
+<main id="main-content">
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-text">
+      <p class="hero-eyebrow" aria-hidden="true">Open-source accessibility hardware</p>
+      <h1 class="hero-title" id="hero-heading">Switch access<br>for <em>Blockly</em></h1>
+      <p class="hero-desc">
+        A CircuitPython firmware + web tooling project that brings full keyboard
+        accessibility to Blockly coding environments — using inexpensive switch
+        hardware anyone can build.
+      </p>
+      <nav class="hero-cta" aria-label="Quick navigation">
+        <a href="build.html" class="btn btn-primary">Build it →</a>
+        <a href="switch-interface-web-display.html" class="btn">Visual Display</a>
+        <a href="blockly_shortcut_configurator.html" class="btn">Configurator</a>
+      </nav>
+    </div>
+    <div class="hero-visual" role="img" aria-label="Illustration of the device TFT mode-select screen showing single-switch and two-switch mode options with example shortcut keys">
+      <div class="device-card">
+        <div class="device-screen" role="presentation">
+          <div class="device-screen-half">
+            <div class="device-screen-label">D1 / A2</div>
+            <div class="device-screen-key">1-SW</div>
+          </div>
+          <div class="device-screen-divider"></div>
+          <div class="device-screen-half">
+            <div class="device-screen-label">D2 / A1</div>
+            <div class="device-screen-key">2-SW</div>
+          </div>
+        </div>
+        <div class="device-keys" role="list" aria-label="Example shortcut keys">
+          <span class="device-key" role="listitem">→</span>
+          <span class="device-key" role="listitem">↓</span>
+          <span class="device-key" role="listitem">↩</span>
+          <span class="device-key" role="listitem">←</span>
+          <span class="device-key" role="listitem">↑</span>
+          <span class="device-key" role="listitem">Del</span>
+          <span class="device-key" role="listitem">W</span>
+          <span class="device-key" role="listitem">T</span>
+        </div>
+        <div class="device-tag">Adafruit Feather ESP32-S3 Rev TFT</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section aria-label="Project features" class="features-strip">
+    <article class="feature-cell">
+      <span class="feature-icon" aria-hidden="true">⚡</span>
+      <h2 class="feature-title">Two switch modes</h2>
+      <p class="feature-desc">Single-switch auto-scanning or two-switch direct navigation — configurable at boot.</p>
+    </article>
+    <article class="feature-cell">
+      <span class="feature-icon" aria-hidden="true">🎛</span>
+      <h2 class="feature-title">Fully customisable</h2>
+      <p class="feature-desc">All shortcuts, timing, and scan order set via a browser-based config tool — no code needed.</p>
+    </article>
+    <article class="feature-cell">
+      <span class="feature-icon" aria-hidden="true">🖥</span>
+      <h2 class="feature-title">Visual + audio</h2>
+      <p class="feature-desc">Web display mirrors the device screen with optional TTS readout for every key and scan event.</p>
+    </article>
+    <article class="feature-cell">
+      <span class="feature-icon" aria-hidden="true">🔓</span>
+      <h2 class="feature-title">Open source</h2>
+      <p class="feature-desc">CircuitPython firmware, config tools, and build instructions — all on GitHub under an open licence.</p>
+    </article>
+  </section>
+
+  <!-- BUILD -->
+  <section class="page-section" aria-labelledby="build-heading" id="section-build">
+    <div class="page-section-sidebar">
+      <div>
+        <div class="page-section-num" aria-hidden="true">01</div>
+        <h2 class="page-section-name" id="build-heading">Build<br>Instructions</h2>
+        <p class="page-section-desc">A step-by-step guide covering parts, wiring, firmware installation, and first boot.</p>
+        <a href="build.html" class="page-section-link" aria-label="Go to build instructions page">Open build guide →</a>
+      </div>
+    </div>
+    <div class="page-section-content" aria-label="Parts overview">
+      <p class="section-label">Core components</p>
+      <div class="parts-grid" role="list">
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">🎛</span>
+          <div><div class="part-chip-name">Feather ESP32-S3 Rev TFT</div><span class="part-chip-sub">Adafruit #5691</span></div>
+        </div>
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">🔌</span>
+          <div><div class="part-chip-name">3.5mm Jack Breakout</div><span class="part-chip-sub">For external switches</span></div>
+        </div>
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">🔋</span>
+          <div><div class="part-chip-name">LiPo Battery</div><span class="part-chip-sub">Optional — USB powered</span></div>
+        </div>
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">🖱</span>
+          <div><div class="part-chip-name">Accessibility Switches</div><span class="part-chip-sub">Any 3.5mm latching switch</span></div>
+        </div>
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">💾</span>
+          <div><div class="part-chip-name">CircuitPython 9+</div><span class="part-chip-sub">Firmware + HID libraries</span></div>
+        </div>
+        <div class="part-chip" role="listitem">
+          <span class="part-chip-icon" aria-hidden="true">📁</span>
+          <div><div class="part-chip-name">code.py + config.py</div><span class="part-chip-sub">From this repository</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISPLAY -->
+  <section class="page-section" aria-labelledby="display-heading" id="section-display">
+    <div class="page-section-sidebar">
+      <div>
+        <div class="page-section-num" aria-hidden="true">02</div>
+        <h2 class="page-section-name" id="display-heading">Visual &amp;<br>Auditory<br>Scanning</h2>
+        <p class="page-section-desc">A companion browser page that mirrors the device display in real time via Web Serial. Includes TTS readout, audio beep feedback, and a live serial log.</p>
+        <a href="switch-interface-web-display.html" class="page-section-link" aria-label="Open the visual and auditory scanning display page">Open display →</a>
+      </div>
+    </div>
+    <div class="page-section-content" aria-label="Display tool preview">
+      <p class="section-label">Live display preview</p>
+      <div class="display-preview" role="img" aria-label="Preview showing current key R large on the left and next key D smaller on the right">
+        <div class="display-preview-bar" aria-hidden="true">
+          <div class="dp-dot" style="background:#ff5f57"></div>
+          <div class="dp-dot" style="background:#febc2e"></div>
+          <div class="dp-dot" style="background:#28c840"></div>
+          <span style="font-family:var(--ff-mono);font-size:var(--text-xs);color:rgba(255,255,255,0.4);margin-left:0.5rem">switch-interface-web-display.html</span>
+        </div>
+        <div class="display-preview-body" aria-hidden="true">
+          <div class="dp-key-main">R</div>
+          <div class="dp-key-next">D</div>
+        </div>
+      </div>
+      <ul style="font-size:var(--text-base);color:var(--ink2);line-height:2;padding-left:1.4rem" aria-label="Display features">
+        <li>Web Serial connection — Chrome &amp; Edge</li>
+        <li>Text-to-speech readout of each shortcut</li>
+        <li>Audio beep on key sent events</li>
+        <li>Live serial log with colour-coded events</li>
+        <li>Screen-reader live region announcements</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CONFIGURATOR -->
+  <section class="page-section" aria-labelledby="config-heading" id="section-config">
+    <div class="page-section-sidebar">
+      <div>
+        <div class="page-section-num" aria-hidden="true">03</div>
+        <h2 class="page-section-name" id="config-heading">Shortcut<br>Configurator</h2>
+        <p class="page-section-desc">Customise shortcuts, scan order, and OS variant — then download a ready-to-use <code>config.py</code> to drop onto your device.</p>
+        <a href="blockly_shortcut_configurator.html" class="page-section-link" aria-label="Open the shortcut configurator tool">Open configurator →</a>
+      </div>
+    </div>
+    <div class="page-section-content" aria-label="Configurator tool preview">
+      <p class="section-label">Configurable shortcuts</p>
+      <div class="config-preview" role="img" aria-label="Preview of the shortcut configurator showing a draggable list of shortcut keys">
+        <div class="config-preview-header">Active shortcuts — drag to reorder</div>
+        <div class="config-row" aria-hidden="true"><span class="config-drag">⠿</span><span class="config-key">tab</span><span class="config-sym">→</span></div>
+        <div class="config-row" aria-hidden="true"><span class="config-drag">⠿</span><span class="config-key">arrow right</span><span class="config-sym">R</span></div>
+        <div class="config-row" aria-hidden="true"><span class="config-drag">⠿</span><span class="config-key">arrow down</span><span class="config-sym">D</span></div>
+        <div class="config-row" aria-hidden="true"><span class="config-drag">⠿</span><span class="config-key">enter</span><span class="config-sym">e</span></div>
+      </div>
+      <ul style="font-size:var(--text-base);color:var(--ink2);line-height:2;padding-left:1.4rem" aria-label="Configurator features">
+        <li>macOS and Windows shortcut variants</li>
+        <li>28 Blockly shortcuts from official docs</li>
+        <li>Drag-to-reorder scan sequence</li>
+        <li>Custom single and multi-key combos</li>
+        <li>Generates and downloads <code>config.py</code></li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-brand">BASI<span>.</span></div>
+  <nav aria-label="Footer navigation">
+    <ul class="footer-links" role="list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="build.html">Build</a></li>
+      <li><a href="switch-interface-web-display.html">Display</a></li>
+      <li><a href="blockly_shortcut_configurator.html">Configure</a></li>
+      <li><a href="https://github.com/loretod/blockly_accessible_switch_interface" target="_blank" rel="noopener" aria-label="GitHub repository (opens in new tab)">GitHub ↗</a></li>
+    </ul>
+  </nav>
+  <p class="footer-copy">Open source — MIT licence</p>
+</footer>
+</body>
+</html>

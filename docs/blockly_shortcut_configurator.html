@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shortcut Configurator — Blockly Accessible Switch Interface</title>
+<meta name="description" content="Browser tool to configure keyboard shortcuts for the BASI device and generate config.py.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="basi-shared.css">
+<style>
+  /* ── CONFIGURATOR TOKENS (light theme) ── */
+  :root {
+    --cfg-bg:        #f4f6fb;
+    --cfg-surface:   #eaecf4;
+    --cfg-card:      #ffffff;
+    --cfg-border:    #cfd5eb;
+    --cfg-border2:   #b5bcd6;
+    --cfg-accent:    #1d4db5;   /* 6.3:1 on white */
+    --cfg-accent2:   #007a8a;   /* 5.6:1 on white */
+    --cfg-warn:      #b52020;   /* 5.5:1 on white */
+    --cfg-text:      #1a1f36;   /* 15:1 on white  */
+    --cfg-muted:     #5a6290;   /* 5.0:1 on white */
+    --cfg-label:     #3a4170;
+    --cfg-drag-over: rgba(29,77,181,0.07);
+    --cfg-shadow:    0 1px 3px rgba(30,40,90,0.09), 0 1px 2px rgba(30,40,90,0.05);
+  }
+
+  body {
+    font-family: 'IBM Plex Mono', var(--ff-mono);
+    background: var(--cfg-bg);
+    color: var(--cfg-text);
+    min-height: 100vh;
+    padding-bottom: 4rem;
+    /* override shared body overflow */
+    overflow: auto;
+  }
+
+  /* ── TOOL NAV overrides for this page ── */
+  .tool-nav-band .nav-links a[aria-current] {
+    background: var(--cfg-accent);
+    color: #fff;
+  }
+
+  /* ── PAGE HEADER ── */
+  .cfg-header {
+    max-width: 900px;
+    margin: 2rem auto 1.5rem;
+    padding: 0 1rem;
+    border-left: 4px solid var(--cfg-accent);
+    padding-left: 1.25rem;
+  }
+  .cfg-header h1 {
+    font-family: var(--ff-head);
+    font-size: clamp(1.3rem, 3vw, 1.85rem);
+    letter-spacing: -0.02em;
+    color: var(--cfg-text);
+  }
+  .cfg-header p {
+    font-size: var(--text-sm);
+    color: var(--cfg-muted);
+    margin-top: 0.4rem;
+    line-height: 1.7;
+  }
+  .cfg-header a { color: var(--cfg-accent); }
+  .badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: 3px;
+    background: var(--cfg-accent);
+    color: #fff;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    font-family: var(--ff-mono);
+  }
+
+  /* ── OS TOGGLE ── */
+  .os-bar {
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--cfg-card);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 8px;
+    padding: 0.85rem 1.25rem;
+    box-shadow: var(--cfg-shadow);
+    flex-wrap: wrap;
+  }
+  .os-bar-label {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cfg-label);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .os-toggle {
+    display: flex;
+    background: var(--cfg-surface);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .os-toggle input[type="radio"] {
+    /* Visually hidden but accessible */
+    position: absolute;
+    opacity: 0;
+    width: 1px; height: 1px;
+  }
+  .os-toggle label {
+    padding: 0.55rem 1.25rem;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    color: var(--cfg-muted);
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+    white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .os-toggle input[type="radio"]:checked + label {
+    background: var(--cfg-accent);
+    color: #fff;
+  }
+  .os-toggle input[type="radio"]:focus-visible + label {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    z-index: 1;
+  }
+  .os-note { font-size: var(--text-xs); color: var(--cfg-muted); margin-left: auto; }
+
+  /* ── LAYOUT ── */
+  .cfg-layout {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+  }
+  @media (max-width: 660px) {
+    .cfg-layout { grid-template-columns: 1fr; }
+    .os-note { display: none; }
+  }
+
+  /* ── PANEL / CARD ── */
+  .panel {
+    background: var(--cfg-card);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--cfg-shadow);
+  }
+  .panel-header {
+    background: var(--cfg-surface);
+    border-bottom: 1.5px solid var(--cfg-border);
+    padding: 0.65rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cfg-label);
+    font-weight: 600;
+  }
+  .panel-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cfg-accent);
+    flex-shrink: 0;
+  }
+  .panel-body { padding: 1.1rem; }
+
+  /* ── TIMING INPUTS ── */
+  .timing-grid { display: grid; gap: 0.8rem; }
+  .field-row { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field-row label {
+    font-size: var(--text-xs);
+    color: var(--cfg-label);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 500;
+  }
+  .field-row input[type="number"] {
+    width: 100%;
+    background: var(--cfg-surface);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 5px;
+    color: var(--cfg-text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: var(--text-base);
+    padding: 0.55rem 0.8rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+    min-height: 48px;
+  }
+  .field-row input[type="number"]:focus {
+    outline: none;
+    border-color: var(--cfg-accent);
+    box-shadow: 0 0 0 3px rgba(29,77,181,0.12);
+  }
+  .field-row input[type="number"]::-webkit-inner-spin-button,
+  .field-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  /* ── KEYCODE LIST ── */
+  .full-width { grid-column: 1 / -1; }
+
+  #keycode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-height: 50px;
+  }
+
+  /*
+   * Grid columns:
+   *   move-btns  | key label        | symbol | delete
+   *   44px       | 1fr              | 72px   | auto
+   */
+  .keycode-item {
+    display: grid;
+    grid-template-columns: 44px 1fr 72px auto;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--cfg-surface);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+  .keycode-item:hover {
+    border-color: var(--cfg-accent);
+    box-shadow: 0 0 0 2px rgba(29,77,181,0.1);
+  }
+  /* Highlight the row that was just moved — brief flash */
+  .keycode-item.just-moved {
+    border-color: var(--cfg-accent);
+    background: rgba(29,77,181,0.07);
+  }
+  .keycode-item.is-custom { border-left: 3px solid var(--cfg-accent2); }
+
+  /* ── MOVE BUTTON STACK ── */
+  .move-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .move-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 26px;
+    min-height: unset;   /* override global .icon-btn min-height */
+    background: var(--cfg-card);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 4px;
+    color: var(--cfg-muted);
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
+    /* Ensure total tappable area meets 44px target by padding the stack container */
+    padding: 0;
+  }
+  .move-btn:hover:not(:disabled) {
+    background: var(--cfg-accent);
+    border-color: var(--cfg-accent);
+    color: #fff;
+  }
+  .move-btn:active:not(:disabled) { transform: scale(0.93); }
+  .move-btn:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .move-btn:disabled {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .key-select, .key-text-input {
+    background: var(--cfg-card);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 5px;
+    color: var(--cfg-text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: var(--text-sm);
+    padding: 0.4rem 0.5rem;
+    width: 100%;
+    transition: border-color 0.15s;
+    min-height: 44px;
+  }
+  .key-select:focus, .key-text-input:focus {
+    outline: none;
+    border-color: var(--cfg-accent);
+    box-shadow: 0 0 0 3px rgba(29,77,181,0.1);
+  }
+
+  .symbol-input {
+    background: var(--cfg-card);
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 5px;
+    color: var(--cfg-accent2);
+    font-family: var(--ff-head);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    padding: 0.4rem 0.5rem;
+    width: 100%;
+    text-align: center;
+    transition: border-color 0.15s;
+    min-height: 44px;
+  }
+  .symbol-input:focus {
+    outline: none;
+    border-color: var(--cfg-accent2);
+    box-shadow: 0 0 0 3px rgba(0,122,138,0.12);
+  }
+
+  .icon-btn {
+    background: none;
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 5px;
+    color: var(--cfg-muted);
+    font-size: 0.9rem;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+    min-width: 44px; min-height: 44px;
+    width: auto; height: auto;
+    padding: 0.35rem 0.7rem;
+  }
+  .icon-btn:hover { border-color: var(--cfg-warn); color: var(--cfg-warn); }
+
+  /* ── COLUMN LABELS ── */
+  .list-labels {
+    display: grid;
+    grid-template-columns: 44px 1fr 72px auto;
+    gap: 0.45rem;
+    padding: 0 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+  .list-labels span {
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cfg-muted);
+    font-weight: 500;
+  }
+  .list-labels span:nth-child(3) { text-align: center; }
+
+  /* ── ADD BUTTONS ── */
+  .add-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: none;
+    border: 1.5px dashed var(--cfg-border2);
+    border-radius: 6px;
+    color: var(--cfg-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: var(--text-sm);
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+    flex: 1;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    min-height: 48px;
+  }
+  .add-btn:hover {
+    border-color: var(--cfg-accent);
+    color: var(--cfg-accent);
+    background: rgba(29,77,181,0.04);
+  }
+  .add-btn.custom:hover {
+    border-color: var(--cfg-accent2);
+    color: var(--cfg-accent2);
+    background: rgba(0,122,138,0.04);
+  }
+
+  /* ── CUSTOM INPUT SECTION ── */
+  .custom-panel { grid-column: 1 / -1; }
+  .custom-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 88px auto;
+    gap: 0.7rem;
+    align-items: end;
+  }
+  @media (max-width: 600px) {
+    .custom-form { grid-template-columns: 1fr 1fr; }
+  }
+  .custom-help {
+    font-size: var(--text-xs);
+    color: var(--cfg-muted);
+    margin-top: 0.7rem;
+    line-height: 1.7;
+    padding: 0.6rem 0.85rem;
+    background: var(--cfg-surface);
+    border-radius: 5px;
+    border-left: 3px solid var(--cfg-accent2);
+  }
+  .add-custom-btn {
+    background: var(--cfg-accent2);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: var(--text-sm);
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+    align-self: end;
+    min-height: 48px;
+  }
+  .add-custom-btn:hover { opacity: 0.85; }
+
+  /* ── REFERENCE TABLE ── */
+  .ref-wrap { max-height: 260px; overflow-y: auto; }
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .ref-table th {
+    background: var(--cfg-surface);
+    color: var(--cfg-label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--text-xs);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 2px solid var(--cfg-border);
+    position: sticky;
+    top: 0;
+    font-weight: 600;
+  }
+  .ref-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--cfg-border);
+    color: var(--cfg-text);
+    line-height: 1.5;
+  }
+  .ref-table tr:hover td { background: var(--cfg-surface); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table td:first-child { color: var(--cfg-muted); }
+  .add-ref-btn {
+    background: none;
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 4px;
+    color: var(--cfg-accent);
+    font-size: var(--text-xs);
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: background 0.15s, color 0.15s;
+    min-height: 36px;
+  }
+  .add-ref-btn:hover {
+    background: var(--cfg-accent);
+    color: #fff;
+    border-color: var(--cfg-accent);
+  }
+
+  /* ── GENERATE / OUTPUT ── */
+  .generate-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .gen-btn {
+    background: var(--cfg-accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-family: var(--ff-head);
+    font-weight: 700;
+    font-size: var(--text-base);
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(29,77,181,0.28);
+    min-height: 52px;
+  }
+  .gen-btn:hover  { opacity: 0.88; }
+  .gen-btn:active { transform: scale(0.97); }
+
+  .dl-btn {
+    background: var(--cfg-card);
+    border: 2px solid var(--cfg-accent);
+    border-radius: 6px;
+    color: var(--cfg-accent);
+    font-family: var(--ff-head);
+    font-weight: 700;
+    font-size: var(--text-base);
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s, color 0.15s;
+    display: none;
+    min-height: 52px;
+  }
+  .dl-btn:hover { background: var(--cfg-accent); color: #fff; }
+  .dl-btn.visible { display: inline-flex; align-items: center; }
+
+  .output-panel { grid-column: 1 / -1; }
+  #output-code {
+    width: 100%;
+    height: 360px;
+    background: #1a1e2b;
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 6px;
+    color: #a8d8a0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: var(--text-sm);
+    padding: 1.1rem;
+    resize: vertical;
+    line-height: 1.75;
+    white-space: pre;
+    overflow: auto;
+    display: none;
+  }
+  #output-code.visible { display: block; }
+
+  /* ── STATUS ── */
+  #status { font-size: var(--text-sm); color: var(--cfg-muted); align-self: center; display: none; }
+  #status.ok  { color: #1a7a50; display: inline; }
+  #status.err { color: var(--cfg-warn); display: inline; }
+
+  .idx { font-size: var(--text-xs); color: var(--cfg-muted); text-align: center; }
+  .section-divider { grid-column: 1/-1; border: none; border-top: 1.5px solid var(--cfg-border); margin: 0.3rem 0; }
+</style>
+</head>
+<body>
+<a href="#config-main" class="skip-link">Skip to configurator</a>
+
+<header role="banner">
+  <nav class="tool-nav-band" aria-label="Site navigation">
+    <a href="index.html" class="nav-logo" aria-label="Blockly Accessible Switch Interface – home">BASI<span>.</span></a>
+    <ul class="nav-links" role="list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="build.html">Build</a></li>
+      <li><a href="switch-interface-web-display.html">Display</a></li>
+      <li><a href="blockly_shortcut_configurator.html" aria-current="page">Configure</a></li>
+    </ul>
+    <a href="https://github.com/loretod/blockly_accessible_switch_interface"
+       class="nav-exit-btn" target="_blank" rel="noopener"
+       aria-label="View source on GitHub (opens in new tab)">↗ GitHub</a>
+  </nav>
+</header>
+
+<main id="config-main">
+
+  <div class="cfg-header">
+    <h1>Switch Interface Configurator <span class="badge">config.py</span></h1>
+    <p>Use the configurator below to build a custom set of keyboard shortcuts for your BASI device and generate a config.py file.</p>
+    <br>
+    <p>Start by selecting your target OS — this ensures the correct modifier keys (Cmd vs Ctrl) are used and swapped automatically if you change your selection later.</p>
+    <br>
+    <p>Use the reference table to add common shortcuts, or build your own custom combos with the builder. You can reorder active shortcuts with the ▲ ▼ buttons</p> 
+    <br>
+    <p>Generate a file preview which can then be downloaded and flashed to your device.</p>
+  </div>
+
+  <!-- ── OS SELECTOR ── -->
+  <div class="os-bar" role="group" aria-labelledby="os-bar-label">
+    <span class="os-bar-label" id="os-bar-label">Target OS</span>
+    <div class="os-toggle">
+      <input type="radio" name="os" id="os-mac" value="mac" checked>
+      <label for="os-mac">🍎 macOS</label>
+      <input type="radio" name="os" id="os-win" value="windows">
+      <label for="os-win">🪟 Windows</label>
+    </div>
+    <span class="os-note">Cmd ↔ Ctrl swaps automatically when you switch OS</span>
+  </div>
+
+  <div class="cfg-layout">
+
+    <!-- ── TIMING ── -->
+    <div class="panel">
+      <div class="panel-header"><span class="dot" aria-hidden="true"></span>Single-Switch Timing</div>
+      <div class="panel-body timing-grid">
+        <div class="field-row">
+          <label for="hold_to_scan">Hold to scan (seconds)</label>
+          <input type="number" id="hold_to_scan" value="2.0" step="0.1" min="0.1"
+                 aria-describedby="hint-hold">
+          <span id="hint-hold" class="sr-only">Duration in seconds the switch must be held before auto-scanning begins</span>
+        </div>
+        <div class="field-row">
+          <label for="scan_interval">Scan interval (seconds)</label>
+          <input type="number" id="scan_interval" value="1.0" step="0.1" min="0.1">
+        </div>
+        <div class="field-row">
+          <label for="max_short_press">Max short press (seconds)</label>
+          <input type="number" id="max_short_press" value="0.5" step="0.05" min="0.05">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="dot" aria-hidden="true"></span>Two-Switch Timing</div>
+      <div class="panel-body timing-grid">
+        <div class="field-row">
+          <label for="debounce">Debounce delay (seconds)</label>
+          <input type="number" id="debounce" value="0.1" step="0.01" min="0.01">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BLOCKLY REFERENCE TABLE ── -->
+    <div class="panel full-width">
+      <div class="panel-header"><span class="dot" aria-hidden="true"></span>Blockly Shortcut Reference — click + to add to your list</div>
+      <div class="ref-wrap">
+        <table class="ref-table" aria-label="Blockly keyboard shortcuts reference">
+          <thead>
+            <tr>
+              <th scope="col">Function</th>
+              <th scope="col" id="ref-key-col">Mac Key</th>
+              <th scope="col"><span class="sr-only">Add action</span></th>
+            </tr>
+          </thead>
+          <tbody id="ref-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ACTIVE SHORTCUTS ── -->
+    <div class="panel full-width">
+      <div class="panel-header"><span class="dot" aria-hidden="true"></span>Active Shortcuts — use ▲ ▼ to reorder</div>
+      <div class="panel-body">
+        <div class="list-labels" aria-hidden="true">
+          <span>Move</span><span>Key / Label</span><span style="text-align:center">Symbol</span><span></span>
+        </div>
+        <div id="keycode-list" aria-label="Active shortcut list" role="list"
+             aria-describedby="list-help"></div>
+        <p id="list-help" class="sr-only">
+          Each shortcut has Move Up and Move Down buttons. Activating a move button keeps
+          focus on that button so you can continue pressing to reorder with minimal switches.
+        </p>
+        <div id="move-announce" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+        <div class="add-row">
+          <button class="add-btn" onclick="addPresetShortcut()">＋ Add from presets</button>
+          <button class="add-btn custom" onclick="toggleCustomForm()" aria-expanded="false" id="toggle-custom-btn">＋ Custom keypress</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOM BUILDER ── -->
+    <div class="panel custom-panel" id="custom-panel" style="display:none">
+      <div class="panel-header"><span class="dot" style="background:var(--cfg-accent2)" aria-hidden="true"></span>Custom Keypress Builder</div>
+      <div class="panel-body">
+        <div class="custom-form">
+          <div class="field-row">
+            <label for="custom-mod">Modifier(s)</label>
+            <select id="custom-mod" class="key-select">
+              <option value="">— none —</option>
+              <option value="LEFT_CONTROL">Ctrl</option>
+              <option value="LEFT_SHIFT">Shift</option>
+              <option value="LEFT_ALT">Alt</option>
+              <option value="LEFT_GUI">Cmd / Win</option>
+              <option value="LEFT_CONTROL,LEFT_SHIFT">Ctrl + Shift</option>
+              <option value="LEFT_CONTROL,LEFT_ALT">Ctrl + Alt</option>
+              <option value="LEFT_GUI,LEFT_SHIFT">Cmd + Shift</option>
+              <option value="LEFT_SHIFT,LEFT_ALT">Shift + Alt</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="custom-key">Base Key</label>
+            <select id="custom-key" class="key-select">
+              <option value="TAB">Tab</option>
+              <option value="ENTER">Enter</option>
+              <option value="SPACE">Space</option>
+              <option value="BACKSPACE">Backspace</option>
+              <option value="DELETE">Delete</option>
+              <option value="ESCAPE">Escape</option>
+              <option value="RIGHT_ARROW">→ Arrow Right</option>
+              <option value="LEFT_ARROW">← Arrow Left</option>
+              <option value="UP_ARROW">↑ Arrow Up</option>
+              <option value="DOWN_ARROW">↓ Arrow Down</option>
+              <option value="HOME">Home</option>
+              <option value="END">End</option>
+              <option value="PAGE_UP">Page Up</option>
+              <option value="PAGE_DOWN">Page Down</option>
+              <option value="INSERT">Insert</option>
+              <optgroup label="Letters">
+                <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+                <option value="G">G</option><option value="H">H</option><option value="I">I</option>
+                <option value="J">J</option><option value="K">K</option><option value="L">L</option>
+                <option value="M">M</option><option value="N">N</option><option value="O">O</option>
+                <option value="P">P</option><option value="Q">Q</option><option value="R">R</option>
+                <option value="S">S</option><option value="T">T</option><option value="U">U</option>
+                <option value="V">V</option><option value="W">W</option><option value="X">X</option>
+                <option value="Y">Y</option><option value="Z">Z</option>
+              </optgroup>
+              <optgroup label="Numbers">
+                <option value="ONE">1</option><option value="TWO">2</option><option value="THREE">3</option>
+                <option value="FOUR">4</option><option value="FIVE">5</option><option value="SIX">6</option>
+                <option value="SEVEN">7</option><option value="EIGHT">8</option><option value="NINE">9</option>
+                <option value="ZERO">0</option>
+              </optgroup>
+              <optgroup label="Function Keys">
+                <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option>
+                <option value="F4">F4</option><option value="F5">F5</option><option value="F6">F6</option>
+                <option value="F7">F7</option><option value="F8">F8</option><option value="F9">F9</option>
+                <option value="F10">F10</option><option value="F11">F11</option><option value="F12">F12</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="custom-symbol">TFT Symbol</label>
+            <input type="text" id="custom-symbol" class="symbol-input" maxlength="4"
+                   placeholder="e.g. ⌘Z" aria-describedby="hint-symbol">
+            <span id="hint-symbol" class="sr-only">1 to 3 characters shown on the device TFT screen</span>
+          </div>
+          <button class="add-custom-btn" onclick="addCustomShortcut()">＋ Add</button>
+        </div>
+        <p class="custom-help">
+          Pick an optional modifier and a base key to build combos like <code>Ctrl+Z</code> (undo) or
+          <code>Cmd+Shift+Z</code> (redo). The TFT symbol appears on the device screen — keep it 1–3 chars.
+          Custom entries (teal border) have an editable label in the active list.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── GENERATE ── -->
+    <hr class="section-divider">
+    <div class="generate-row">
+      <button class="gen-btn" onclick="generateConfig()">▶ Generate config.py</button>
+      <button class="dl-btn" id="dl-btn" onclick="downloadConfig()">↓ Download config.py</button>
+      <span id="status" role="status" aria-live="polite"></span>
+    </div>
+
+    <!-- ── OUTPUT ── -->
+    <div class="panel output-panel">
+      <div class="panel-header"><span class="dot" aria-hidden="true"></span>config.py — preview</div>
+      <div class="panel-body">
+        <textarea id="output-code" readonly spellcheck="false"
+                  aria-label="Generated config.py file content — read only preview"></textarea>
+      </div>
+    </div>
+
+  </div><!-- /.cfg-layout -->
+
+</main>
+
+<script>
+// ── BLOCKLY SHORTCUT DATA ──────────────────────────────────────────────────
+const BLOCKLY_SHORTCUTS = [
+  { fn:"Move forward",     mac:{label:"tab",           kc:["TAB"]},                                win:{label:"tab",            kc:["TAB"]} },
+  { fn:"Move backward",    mac:{label:"shift+tab",     kc:["LEFT_SHIFT","TAB"]},                   win:{label:"shift+tab",      kc:["LEFT_SHIFT","TAB"]} },
+  { fn:"Confirm",          mac:{label:"enter",         kc:["ENTER"]},                              win:{label:"enter",          kc:["ENTER"]} },
+  { fn:"Cut",              mac:{label:"cmd+x",         kc:["LEFT_GUI","X"]},                       win:{label:"ctrl+x",         kc:["LEFT_CONTROL","X"]} },
+  { fn:"Copy",             mac:{label:"cmd+c",         kc:["LEFT_GUI","C"]},                       win:{label:"ctrl+c",         kc:["LEFT_CONTROL","C"]} },
+  { fn:"Paste",            mac:{label:"cmd+v",         kc:["LEFT_GUI","V"]},                       win:{label:"ctrl+v",         kc:["LEFT_CONTROL","V"]} },
+  { fn:"Undo",             mac:{label:"cmd+z",         kc:["LEFT_GUI","Z"]},                       win:{label:"ctrl+z",         kc:["LEFT_CONTROL","Z"]} },
+  { fn:"Redo",             mac:{label:"cmd+shift+z",   kc:["LEFT_GUI","LEFT_SHIFT","Z"]},          win:{label:"ctrl+shift+z",   kc:["LEFT_CONTROL","LEFT_SHIFT","Z"]} },
+  { fn:"Open menu",        mac:{label:"cmd+enter",     kc:["LEFT_GUI","ENTER"]},                   win:{label:"ctrl+enter",     kc:["LEFT_CONTROL","ENTER"]} },
+  { fn:"Duplicate",        mac:{label:"d",             kc:["D"]},                                  win:{label:"d",              kc:["D"]} },
+  { fn:"Next stack",       mac:{label:"n",             kc:["N"]},                                  win:{label:"n",              kc:["N"]} },
+  { fn:"Previous stack",   mac:{label:"b",             kc:["B"]},                                  win:{label:"b",              kc:["B"]} },
+  { fn:"Workspace",        mac:{label:"w",             kc:["W"]},                                  win:{label:"w",              kc:["W"]} },
+  { fn:"Format",           mac:{label:"f",             kc:["F"]},                                  win:{label:"f",              kc:["F"]} },
+  { fn:"Move right",       mac:{label:"arrow right",   kc:["RIGHT_ARROW"]},                        win:{label:"arrow right",    kc:["RIGHT_ARROW"]} },
+  { fn:"Move left",        mac:{label:"arrow left",    kc:["LEFT_ARROW"]},                         win:{label:"arrow left",     kc:["LEFT_ARROW"]} },
+  { fn:"Move up",          mac:{label:"arrow up",      kc:["UP_ARROW"]},                           win:{label:"arrow up",       kc:["UP_ARROW"]} },
+  { fn:"Move down",        mac:{label:"arrow down",    kc:["DOWN_ARROW"]},                         win:{label:"arrow down",     kc:["DOWN_ARROW"]} },
+  { fn:"Move mode",        mac:{label:"m",             kc:["M"]},                                  win:{label:"m",              kc:["M"]} },
+  { fn:"Disconnect block", mac:{label:"x",             kc:["X"]},                                  win:{label:"x",              kc:["X"]} },
+  { fn:"Remove block",     mac:{label:"delete",        kc:["DELETE"]},                             win:{label:"delete",         kc:["DELETE"]} },
+  { fn:"Toolbox",          mac:{label:"t",             kc:["T"]},                                  win:{label:"t",              kc:["T"]} },
+  { fn:"Area menu",        mac:{label:"cmd+b",         kc:["LEFT_GUI","B"]},                       win:{label:"ctrl+b",         kc:["LEFT_CONTROL","B"]} },
+  { fn:"Header area",      mac:{label:"1",             kc:["ONE"]},                                win:{label:"1",              kc:["ONE"]} },
+  { fn:"Simulator area",   mac:{label:"2",             kc:["TWO"]},                                win:{label:"2",              kc:["TWO"]} },
+  { fn:"Toolbox area",     mac:{label:"3",             kc:["THREE"]},                              win:{label:"3",              kc:["THREE"]} },
+  { fn:"Workspace area",   mac:{label:"4",             kc:["FOUR"]},                               win:{label:"4",              kc:["FOUR"]} },
+  { fn:"Download area",    mac:{label:"5",             kc:["FIVE"]},                               win:{label:"5",              kc:["FIVE"]} },
+];
+
+// ── DEFAULT ACTIVE SHORTCUTS ──────────────────────────────────────────────
+let shortcuts = [
+  { label:"tab",         kc:["TAB"],         symbol:"→", custom:false },
+  { label:"arrow right", kc:["RIGHT_ARROW"], symbol:"R", custom:false },
+  { label:"arrow down",  kc:["DOWN_ARROW"],  symbol:"D", custom:false },
+  { label:"enter",       kc:["ENTER"],       symbol:"e", custom:false },
+  { label:"arrow left",  kc:["LEFT_ARROW"],  symbol:"L", custom:false },
+  { label:"arrow up",    kc:["UP_ARROW"],    symbol:"U", custom:false },
+  { label:"delete",      kc:["DELETE"],      symbol:"x", custom:false },
+  { label:"w",           kc:["W"],           symbol:"W", custom:false },
+  { label:"t",           kc:["T"],           symbol:"T", custom:false },
+];
+
+let dragSrcIdx = null;
+let currentOS  = 'mac';
+
+// ── OS TOGGLE ──────────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="os"]').forEach(r => {
+  r.addEventListener('change', () => {
+    currentOS = r.value;
+    document.getElementById('ref-key-col').textContent =
+      currentOS === 'mac' ? 'Mac Key' : 'Windows Key';
+    renderRefTable();
+  });
+});
+
+// ── REFERENCE TABLE ────────────────────────────────────────────────────────
+function renderRefTable() {
+  const tbody = document.getElementById('ref-body');
+  tbody.innerHTML = '';
+  BLOCKLY_SHORTCUTS.forEach((sc, i) => {
+    const osData = currentOS === 'mac' ? sc.mac : sc.win;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${sc.fn}</td>
+      <td><kbd style="background:var(--cfg-surface);border:1px solid var(--cfg-border);border-radius:3px;padding:2px 8px;font-size:var(--text-xs);font-family:'IBM Plex Mono',monospace;color:var(--cfg-text)">${osData.label}</kbd></td>
+      <td><button class="add-ref-btn" data-idx="${i}" aria-label="Add ${sc.fn} shortcut">＋ add</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.add-ref-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sc = BLOCKLY_SHORTCUTS[parseInt(btn.dataset.idx)];
+      const d  = currentOS === 'mac' ? sc.mac : sc.win;
+      const sym = d.label.split('+').pop().trim().slice(0,3).toUpperCase();
+      shortcuts.push({ label: d.label, kc: [...d.kc], symbol: sym, custom: false });
+      const newIdx = shortcuts.length - 1;
+      renderList({ idx: newIdx, btn: 'up' });
+      requestAnimationFrame(() => {
+        document.getElementById('keycode-list').lastElementChild
+          ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+      setStatus('ok', `✓ Added "${sc.fn}"`);
+    });
+  });
+}
+
+// ── ACTIVE LIST ────────────────────────────────────────────────────────────
+// focusTarget: after re-render, focus this descriptor: { idx, btn: 'up'|'down'|'del' }
+let focusTarget = null;
+
+function renderList(ft) {
+  if (ft !== undefined) focusTarget = ft;
+  const list = document.getElementById('keycode-list');
+  list.innerHTML = '';
+  const total = shortcuts.length;
+
+  shortcuts.forEach((sc, i) => {
+    const row = document.createElement('div');
+    row.className = 'keycode-item' + (sc.custom ? ' is-custom' : '');
+    row.setAttribute('role', 'listitem');
+    row.setAttribute('aria-label', `Position ${i + 1} of ${total}: ${sc.label}`);
+    row.dataset.idx = i;
+
+    // ── Move buttons (Up / Down) ──────────────────────────
+    const moveBtns = document.createElement('div');
+    moveBtns.className = 'move-btns';
+    moveBtns.setAttribute('aria-label', `Move ${sc.label}`);
+
+    const upBtn = document.createElement('button');
+    upBtn.className = 'move-btn move-up';
+    upBtn.setAttribute('aria-label', `Move ${sc.label} up`);
+    upBtn.setAttribute('data-move', 'up');
+    upBtn.setAttribute('data-idx', i);
+    upBtn.innerHTML = '▲';
+    if (i === 0) upBtn.disabled = true;
+    upBtn.addEventListener('click', () => moveShortcut(i, -1, 'up'));
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'move-btn move-down';
+    downBtn.setAttribute('aria-label', `Move ${sc.label} down`);
+    downBtn.setAttribute('data-move', 'down');
+    downBtn.setAttribute('data-idx', i);
+    downBtn.innerHTML = '▼';
+    if (i === total - 1) downBtn.disabled = true;
+    downBtn.addEventListener('click', () => moveShortcut(i, 1, 'down'));
+
+    moveBtns.append(upBtn, downBtn);
+
+    // ── Key label ─────────────────────────────────────────
+    let keyEl;
+    if (sc.custom) {
+      keyEl = document.createElement('input');
+      keyEl.type = 'text';
+      keyEl.className = 'key-text-input';
+      keyEl.value = sc.label;
+      keyEl.setAttribute('aria-label', `Label for shortcut ${i + 1}`);
+      keyEl.addEventListener('input', () => { shortcuts[i].label = keyEl.value; });
+    } else {
+      keyEl = document.createElement('span');
+      keyEl.style.cssText = 'font-size:var(--text-sm);color:var(--cfg-text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+      keyEl.textContent = sc.label;
+      keyEl.title = sc.kc.map(k => 'Keycode.' + k).join(', ');
+    }
+
+    // ── Symbol input ──────────────────────────────────────
+    const sym = document.createElement('input');
+    sym.type = 'text';
+    sym.className = 'symbol-input';
+    sym.maxLength = 4;
+    sym.value = sc.symbol;
+    sym.title = 'TFT display symbol';
+    sym.setAttribute('aria-label', `TFT symbol for ${sc.label}`);
+    sym.addEventListener('input', () => { shortcuts[i].symbol = sym.value; });
+
+    // ── Delete button ─────────────────────────────────────
+    const del = document.createElement('button');
+    del.className = 'icon-btn';
+    del.setAttribute('aria-label', `Remove ${sc.label}`);
+    del.textContent = '✕';
+    del.addEventListener('click', () => {
+      shortcuts.splice(i, 1);
+      renderList({ idx: Math.min(i, shortcuts.length - 1), btn: 'up' });
+    });
+
+    row.append(moveBtns, keyEl, sym, del);
+
+    // Drag-and-drop preserved for mouse users
+    row.draggable = true;
+    row.addEventListener('dragstart', e => { dragSrcIdx = i; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); list.querySelectorAll('.keycode-item').forEach(r => r.classList.remove('drag-over')); });
+    row.addEventListener('dragover',  e => { e.preventDefault(); list.querySelectorAll('.keycode-item').forEach(r => r.classList.remove('drag-over')); row.classList.add('drag-over'); });
+    row.addEventListener('drop',      e => { e.preventDefault(); if (dragSrcIdx !== null && dragSrcIdx !== i) { const m = shortcuts.splice(dragSrcIdx, 1)[0]; shortcuts.splice(i, 0, m); renderList(); } });
+
+    list.appendChild(row);
+  });
+
+  // ── Restore focus after re-render ────────────────────────
+  if (focusTarget !== null) {
+    const ft = focusTarget;
+    focusTarget = null;
+    requestAnimationFrame(() => {
+      const rows = list.querySelectorAll('.keycode-item');
+      const targetRow = rows[ft.idx];
+      if (!targetRow) return;
+      let el;
+      if (ft.btn === 'up')   el = targetRow.querySelector('.move-up');
+      if (ft.btn === 'down') el = targetRow.querySelector('.move-down');
+      if (ft.btn === 'del')  el = targetRow.querySelector('.icon-btn');
+      // If the button we wanted is now disabled (hit boundary), try the other
+      if (el && el.disabled) {
+        el = targetRow.querySelector(ft.btn === 'up' ? '.move-down' : '.move-up');
+      }
+      if (el && !el.disabled) {
+        el.focus();
+        // Brief visual highlight on the moved row
+        targetRow.classList.add('just-moved');
+        setTimeout(() => targetRow.classList.remove('just-moved'), 600);
+      }
+    });
+  }
+}
+
+// ── MOVE SHORTCUT ─────────────────────────────────────────────────────────
+function moveShortcut(fromIdx, direction, btn) {
+  const toIdx = fromIdx + direction;
+  if (toIdx < 0 || toIdx >= shortcuts.length) return;
+
+  // Swap
+  const tmp = shortcuts[fromIdx];
+  shortcuts[fromIdx] = shortcuts[toIdx];
+  shortcuts[toIdx]   = tmp;
+
+  // Announce to screen readers
+  const label = shortcuts[toIdx].label;
+  const pos   = toIdx + 1;
+  const total = shortcuts.length;
+  const ann   = document.getElementById('move-announce');
+  ann.textContent = '';
+  requestAnimationFrame(() => {
+    ann.textContent = `${label} moved to position ${pos} of ${total}`;
+  });
+
+  // Re-render, keeping focus on the same move button at the item's new position
+  renderList({ idx: toIdx, btn });
+}
+
+// ── ADD PRESET ────────────────────────────────────────────────────────────
+function addPresetShortcut() {
+  const sc = BLOCKLY_SHORTCUTS[0];
+  const d  = currentOS === 'mac' ? sc.mac : sc.win;
+  shortcuts.push({ label: d.label, kc: [...d.kc], symbol: d.label[0].toUpperCase(), custom: false });
+  const newIdx = shortcuts.length - 1;
+  renderList({ idx: newIdx, btn: 'up' });
+  requestAnimationFrame(() => {
+    document.getElementById('keycode-list').lastElementChild
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+// ── CUSTOM FORM ───────────────────────────────────────────────────────────
+function toggleCustomForm() {
+  const p   = document.getElementById('custom-panel');
+  const btn = document.getElementById('toggle-custom-btn');
+  const isHidden = p.style.display === 'none' || p.style.display === '';
+  p.style.display = isHidden ? '' : 'none';
+  btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+}
+
+const KEY_LABEL_MAP = {
+  TAB:'tab', ENTER:'enter', SPACE:'space', BACKSPACE:'backspace', DELETE:'delete',
+  ESCAPE:'esc', RIGHT_ARROW:'→', LEFT_ARROW:'←', UP_ARROW:'↑', DOWN_ARROW:'↓',
+  HOME:'home', END:'end', PAGE_UP:'pgup', PAGE_DOWN:'pgdn', INSERT:'ins',
+  ONE:'1',TWO:'2',THREE:'3',FOUR:'4',FIVE:'5',SIX:'6',SEVEN:'7',EIGHT:'8',NINE:'9',ZERO:'0',
+};
+const MOD_LABEL_MAP = {
+  LEFT_CONTROL:'ctrl', LEFT_SHIFT:'shift', LEFT_ALT:'alt', LEFT_GUI:'cmd'
+};
+
+function addCustomShortcut() {
+  const modVal = document.getElementById('custom-mod').value;
+  const keyVal = document.getElementById('custom-key').value;
+  const symVal = document.getElementById('custom-symbol').value;
+
+  const mods   = modVal ? modVal.split(',') : [];
+  const kc     = [...mods, keyVal];
+  const modStr = mods.map(m => MOD_LABEL_MAP[m] || m.toLowerCase()).join('+');
+  const keyStr = KEY_LABEL_MAP[keyVal] || keyVal.toLowerCase();
+  const label  = modStr ? `${modStr}+${keyStr}` : keyStr;
+  const symbol = symVal || keyStr.slice(0,3).toUpperCase();
+
+  shortcuts.push({ label, kc, symbol, custom: true });
+  const newIdx = shortcuts.length - 1;
+  renderList({ idx: newIdx, btn: 'up' });
+  document.getElementById('custom-symbol').value = '';
+  requestAnimationFrame(() => {
+    document.getElementById('keycode-list').lastElementChild
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  setStatus('ok', `✓ Added custom: ${label}`);
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────
+function generateConfig() {
+  const hold       = parseFloat(document.getElementById('hold_to_scan').value)    || 2.0;
+  const scan       = parseFloat(document.getElementById('scan_interval').value)   || 1.0;
+  const shortPress = parseFloat(document.getElementById('max_short_press').value) || 0.5;
+  const debounce   = parseFloat(document.getElementById('debounce').value)        || 0.1;
+
+  if (!shortcuts.length) { setStatus('err','⚠ Add at least one shortcut first.'); return; }
+
+  const osLabel = currentOS === 'mac' ? 'macOS' : 'Windows';
+  const ts      = new Date().toISOString().replace('T',' ').split('.')[0] + ' UTC';
+
+  const kcLines  = shortcuts.map(sc => {
+    const codes = sc.kc.map(k => `Keycode.${k}`).join(', ');
+    return `    ("${sc.label.replace(/'/g,"\\'")}",  [${codes}]),`;
+  }).join('\n');
+
+  const symLines = shortcuts.map(sc =>
+    `    "${sc.label.replace(/'/g,"\\'")}": "${(sc.symbol||'?').replace(/"/g,'\\"')}",`
+  ).join('\n');
+
+  const out =
+`# config.py — Blockly Switch Interface Configuration
+# Generated by Blockly Shortcut Configurator
+# ${ts}  |  OS: ${osLabel}
+#
+# Copy this file to your CircuitPython CIRCUITPY drive.
+# It is imported by code.py to override the defaults.
+#
+# ─────────────────────────────────────────────────────
+# USAGE IN code.py (place AFTER KEYCODES / KEY_SYMBOLS):
+#   try:
+#       from config import *
+#   except ImportError:
+#       pass   # use defaults if config.py is missing
+# ─────────────────────────────────────────────────────
+
+# ── SINGLE-SWITCH TIMING ─────────────────────────────
+
+HOLD_TO_SCAN_SECS   = ${hold.toFixed(1)}
+SCAN_INTERVAL_SECS  = ${scan.toFixed(1)}
+MAX_SHORT_PRESS_SECS = ${shortPress.toFixed(2)}
+
+# ── TWO-SWITCH TIMING ────────────────────────────────
+
+DEBOUNCE_TIME = ${debounce.toFixed(2)}
+
+# ── KEYBOARD SHORTCUTS (${osLabel}) ──────────────────
+# Order = scan / navigation sequence.
+# Multi-key combos: list modifiers first.
+# e.g. ("cmd+z", [Keycode.LEFT_GUI, Keycode.Z])
+
+from adafruit_hid.keycode import Keycode
+
+KEYCODES = [
+${kcLines}
+]
+
+# ── TFT DISPLAY SYMBOLS ──────────────────────────────
+# Shown on the 240×135 TFT. Keep to 1–3 characters.
+
+KEY_SYMBOLS = {
+${symLines}
+}
+`;
+
+  const ta = document.getElementById('output-code');
+  ta.value = out;
+  ta.classList.add('visible');
+  document.getElementById('dl-btn').classList.add('visible');
+  setStatus('ok', `✓ ${shortcuts.length} shortcut${shortcuts.length!==1?'s':''} · ${osLabel} — ready`);
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────────────
+function downloadConfig() {
+  const c = document.getElementById('output-code').value;
+  if (!c) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([c],{type:'text/plain'}));
+  a.download = 'config.py';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus('ok','✓ config.py downloaded');
+}
+
+// ── STATUS ────────────────────────────────────────────────────────────────
+function setStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = type;
+  el.textContent = msg;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderRefTable();
+renderList(null);
+</script>
+</main>
+</body>
+</html>
