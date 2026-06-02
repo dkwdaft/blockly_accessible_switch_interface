@@ -297,10 +297,10 @@
           <table class="parts-table" aria-label="Parts list">
             <thead><tr><th scope="col">Component</th><th scope="col">Details</th><th scope="col">Notes</th></tr></thead>
             <tbody>
-              <tr><td>Adafruit Feather ESP32-S3 Rev TFT</td><td>Adafruit #5691</td><td>Built-in 240×135 TFT display</td></tr>
+              <tr><td>Adafruit Feather ESP32-S3 Rev TFT</td><td><a href="https://www.adafruit.com/product/5691" target="_blank">#5691</a></td><td>Built-in 240×135 TFT display</td></tr>
               <tr><td>3.5mm Stereo Jack Breakout (×2)</td><td>TRRS or TRS, panel-mount</td><td>For A1 (nav) and A2 (select)</td></tr>
-              <tr><td>Accessibility switches (×1 or ×2)</td><td>Any 3.5mm latching or momentary</td><td>Wired to GND, normally open</td></tr>
-              <tr><td>Small enclosure (optional)</td><td>Any project box ≥ 80×50mm</td><td>3D print or off-the-shelf</td></tr>
+              <tr><td>Accessibility switches (×1 or ×2)</td><td>Any 3.5mm momentary assistive switch</td><td>Wired to GND, normally open</td></tr>
+              <tr><td>Small enclosure</td><td>Any project box ≥ 80×50mm or <a href="https://www.printables.com/model/1533483-blockly-switch-interface" target="_blank">3D printed files</a></td><td>3D print or off-the-shelf</td></tr>
               <tr><td>USB-C cable</td><td>Data-capable</td><td>For firmware install and USB HID</td></tr>
             </tbody>
           </table>
@@ -342,17 +342,17 @@
           <h2 class="step-title" id="heading-cp">Install CircuitPython</h2>
         </div>
         <div class="step-body">
-          <p>The firmware requires CircuitPython 9 or later.</p>
-          <ol class="install-steps" aria-label="CircuitPython installation steps">
-            <li><strong>Download</strong> the latest <code>.bin</code> for Feather ESP32-S3 Rev TFT from <a href="https://circuitpython.org/board/adafruit_feather_esp32s3_tft/" target="_blank" rel="noopener">circuitpython.org</a>.</li>
-            <li><strong>Enter bootloader</strong> by holding BOOT while clicking RESET — the drive <code>FTHRS3BOOT</code> appears.</li>
-            <li><strong>Drag and drop</strong> the <code>.bin</code> onto <code>FTHRS3BOOT</code>. The board reboots automatically.</li>
-            <li>A drive named <strong><code>CIRCUITPY</code></strong> appears — you're ready to copy files.</li>
-          </ol>
           <div class="callout success" role="note">
             <span class="callout-icon" aria-hidden="true">✓</span>
-            <span>Verify by opening a serial terminal — you should see the REPL prompt <code>&gt;&gt;&gt;</code>.</span>
+            <span>Your board may require installation of the TinyUF2 bootloader. Follow the instructions on the <a href="https://learn.adafruit.com/esp32-s3-reverse-tft-feather/update-tinyuf2-bootloader-for-circuitpython-10-4mb-boards-only" target="_blank" rel="noopener">Adafruit Learn Guide</a>.</span>
           </div>
+          <p>The firmware requires CircuitPython 10 or later.</p>
+          <ol class="install-steps" aria-label="CircuitPython installation steps">
+            <li><strong>Download</strong> the latest <code>.UF2</code> for Feather ESP32-S3 Rev TFT from <a href="https://circuitpython.org/board/adafruit_feather_esp32s3_reverse_tft/" target="_blank" rel="noopener">circuitpython.org</a>.</li>
+            <li><strong>Enter bootloader</strong> by clicking the RESET button— the drive <code>FTHRS3BOOT</code> appears.</li>
+            <li><strong>Drag and drop</strong> the <code>.UF2</code> file onto <code>FTHRS3BOOT</code>. The board reboots automatically.</li>
+            <li>A drive named <strong><code>CIRCUITPY</code></strong> appears — you're ready to copy files.</li>
+          </ol>
         </div>
       </section>
 
@@ -426,6 +426,17 @@
 <span class="code-kw">except</span> ImportError:
     <span class="code-kw">pass</span>  <span class="code-comment"># config.py missing — use defaults above</span></div>
         </div>
+          <div style="margin-top: 1rem; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 2px solid var(--ink); border-radius: 4px;">
+            <iframe
+              src="https://www.youtube-nocookie.com/watch?v=kUqRWDpYum8"
+              title="Single-switch mode walkthrough"
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+        </div>
       </section>
 
       <section class="build-step" id="step-boot" aria-labelledby="heading-boot">
@@ -434,7 +445,7 @@
           <h2 class="step-title" id="heading-boot">First Boot</h2>
         </div>
         <div class="step-body">
-          <p>Power via USB (or LiPo). The TFT shows the mode-select screen:</p>
+          <p>Power via USB. The TFT shows the mode-select screen:</p>
           <ul style="margin:0.9rem 0 0.9rem 1.4rem;font-size:var(--text-base);color:var(--ink2);line-height:2">
             <li>Left side — <strong>D1 / A2</strong> — Single-switch scanning mode</li>
             <li>Right side — <strong>D2 / A1</strong> — Two-switch direct mode</li>
@@ -496,7 +507,7 @@
           <h2 class="step-title" id="heading-display">Display <span style="font-size: var(--text-base); font-weight: 400; color: var(--ink3);">(optional)</span></h2>
         </div>
         <div class="step-body">
-          <p>The Feather ESP32-S3 TFT has a small built-in display that shows the active shortcut, next shortcut and connection status. Users with low vision may benefit from the <a href="/switch-interface-web-display.html"> Display Tool</a> as an alternative to the small onboard screen. The tool provides a larger, more readable interface for displaying information and text to speech support if enabled.</p>
+          <p>The Feather ESP32-S3 TFT has a small built-in display that shows the active shortcut, next shortcut and connection status. Users with low vision may benefit from the <a href="/switch-interface-web-display.html"> Display Tool</a> as an alternative to the small onboard screen. The web app tool provides a larger, high contrast, more readable interface for displaying information and text to speech support if enabled.</p>
           <p>Watch the walkthrough below for a live demo of the display in action.</p>
           <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 2px solid var(--ink); border-radius: 4px; margin: 1.25rem 0;">
             <iframe
