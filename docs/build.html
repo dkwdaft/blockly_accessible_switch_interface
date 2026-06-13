@@ -281,6 +281,7 @@
         <li><a href="#step-config"><span class="step-num" aria-hidden="true">6</span>Configuration <span style="font-size: var(--text-xs); color: var(--ink3);">(optional)</span></a></li>
         <li><a href="#step-boot"><span class="step-num" aria-hidden="true">7</span>First boot</a></li>
         <li><a href="#step-modes"><span class="step-num" aria-hidden="true">8</span>Switch modes</a></li>
+        <li><a href="#step-mode0"><span class="step-num" aria-hidden="true">↳</span>Mode 0 — Direct</a></li>
         <li><a href="#step-display"><span class="step-num" aria-hidden="true">9</span>Display <span style="font-size: var(--text-xs); color: var(--ink3);">(optional)</span></a></li>
       </ol>
     </nav>
@@ -324,7 +325,7 @@
               <tr><td><span class="pin-tag gpio">A1</span></td><td>Navigate switch</td><td>Tip → A1, Sleeve → GND</td><td>Active LOW (Pull.UP)</td></tr>
               <tr><td><span class="pin-tag gpio">A2</span></td><td>Select / Single switch</td><td>Tip → A2, Sleeve → GND</td><td>Active LOW (Pull.UP)</td></tr>
               <tr><td><span class="pin-tag gnd">GND</span></td><td>Ground reference</td><td>Sleeve of both jacks</td><td>–</td></tr>
-              <tr><td><span class="pin-tag gpio">D0</span></td><td>Onboard — return to menu</td><td>Built-in button</td><td>Active LOW (Pull.UP)</td></tr>
+              <tr><td><span class="pin-tag gpio">D0</span></td><td>Onboard — Direct Switch Interface</td><td>Built-in button</td><td>Active LOW (Pull.UP)</td></tr>
               <tr><td><span class="pin-tag gpio">D1</span></td><td>Onboard — single-switch mode</td><td>Built-in button</td><td>Active HIGH (Pull.DOWN)</td></tr>
               <tr><td><span class="pin-tag gpio">D2</span></td><td>Onboard — two-switch mode</td><td>Built-in button</td><td>Active HIGH (Pull.DOWN)</td></tr>
             </tbody>
@@ -428,10 +429,10 @@
         </div>
           <div style="margin-top: 1rem; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 2px solid var(--ink); border-radius: 4px;">
             <iframe
-              src="https://www.youtube-nocookie.com/watch?v=kUqRWDpYum8"
-              title="Single-switch mode walkthrough"
+              src="https://www.youtube.com/watch?v=kUqRWDpYum8"
+              title="Using the configurator walkthrough"
               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture"
               allowfullscreen
               loading="lazy">
             </iframe>
@@ -448,12 +449,17 @@
           <h2 class="step-title" id="heading-boot">First Boot</h2>
         </div>
         <div class="step-body">
-          <p>Power via USB. The TFT shows the mode-select screen:</p>
+          <p>Power via USB. The TFT shows the mode-select screen with three zones:</p>
           <ul style="margin:0.9rem 0 0.9rem 1.4rem;font-size:var(--text-base);color:var(--ink2);line-height:2">
-            <li>Left side — <strong>D1 / A2</strong> — Single-switch scanning mode</li>
-            <li>Right side — <strong>D2 / A1</strong> — Two-switch direct mode</li>
+            <li>Left — <strong>D0</strong> — Direct Switch Mode (Mode 0)</li>
+            <li>Centre — <strong>D1 / A2</strong> — Single-switch scanning mode</li>
+            <li>Right — <strong>D2 / A1</strong> — Two-switch direct mode</li>
           </ul>
-          <p>Press the relevant button or external switch to enter a mode. Press <strong>D0</strong> at any time to return to the mode-select screen.</p>
+          <p>Press the relevant onboard button or external switch to enter a mode. To return to the mode-select screen, press the board's <strong>RESET</strong> button. In Mode 0 you can also <strong>hold an external switch</strong> for 1.5 s to exit (useful when the onboard buttons aren't reachable).</p>
+          <div class="callout info" role="note">
+            <span class="callout-icon" aria-hidden="true">ℹ</span>
+            <span>Can't reach the onboard D0 button? <strong>Double-click</strong> either external switch (A1 or A2) at the mode-select screen to jump straight into Mode 0 — Direct Switch.</span>
+          </div>
         </div>
       </section>
 
@@ -499,7 +505,70 @@
           </div>
           <div class="callout info" role="note">
             <span class="callout-icon" aria-hidden="true">ℹ</span>
-            <span>Mode can also be selected at startup with the external switches: A2 (select) for single-switch mode, A1 (nav) for two-switch mode.</span>
+            <span>Single-switch and two-switch modes can also be selected at startup with the external switches: A2 (select) for single-switch mode, A1 (nav) for two-switch mode. To leave any mode, press the board's RESET button (Mode 0 can also be exited by holding a switch).</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="build-step" id="step-mode0" aria-labelledby="heading-mode0">
+        <div class="step-header">
+          <span class="step-counter">Mode 0</span>
+          <h2 class="step-title" id="heading-mode0">Direct Switch Mode</h2>
+        </div>
+        <div class="step-body">
+          <p>Mode 0 maps each external switch directly to a single, immediate action — no scanning or navigation required. It is designed for users who need a simple, low-effort input method or who want to control mouse and media functions with their switches.</p>
+
+          <div class="mode-grid" role="list" style="grid-template-columns:1fr">
+            <div class="mode-card" role="listitem">
+              <h3 class="mode-card-title">Direct Switch (Mode 0)</h3>
+              <p class="mode-card-desc">Each switch fires one action immediately on press. Default: Switch 1 = Enter, Switch 2 = Tab. Fully configurable in the Shortcut Configurator.</p>
+              <div class="mode-card-actions" aria-label="Mode 0 actions">
+                <div class="mode-action"><span class="mode-action-key">A1 tap</span><span class="mode-action-desc">Switch 1 action (default: Enter)</span></div>
+                <div class="mode-action"><span class="mode-action-key">A2 tap</span><span class="mode-action-desc">Switch 2 action (default: Tab)</span></div>
+                <div class="mode-action"><span class="mode-action-key">A1/A2 hold (1.5 s)</span><span class="mode-action-desc">Return to mode select</span></div>
+                <div class="mode-action"><span class="mode-action-key">RESET button</span><span class="mode-action-desc">Return to mode select</span></div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-family:var(--ff-mono);font-size:var(--text-base);margin:1.25rem 0 0.6rem;color:var(--ink)">How to enter Mode 0</h3>
+          <table class="pin-table" aria-label="Ways to enter Mode 0">
+            <thead><tr><th scope="col">Method</th><th scope="col">How</th><th scope="col">Best for</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pin-tag gpio">D0</span></td><td>Press onboard D0 button at mode-select screen</td><td>Initial setup, tester access</td></tr>
+              <tr><td>Double-click</td><td>Double-click either external switch (A1 or A2) at the mode-select screen within 0.4 s</td><td>Users who cannot reach onboard buttons</td></tr>
+              <tr><td><code>config.py</code></td><td>Run <code>run_direct_switch_mode()</code> as the first call in the main loop</td><td>Dedicated single-purpose device</td></tr>
+            </tbody>
+          </table>
+          <div class="callout info" role="note" style="margin-top:0.9rem">
+            <span class="callout-icon" aria-hidden="true">ℹ</span>
+            <span>Because a single external-switch click waits briefly (the double-click window, default 0.4 s) to watch for a second click, entering single- or two-switch mode <em>via an external switch</em> has a short deliberate delay. The onboard D1 / D2 buttons enter those modes instantly.</span>
+          </div>
+
+          <h3 style="font-family:var(--ff-mono);font-size:var(--text-base);margin:1.25rem 0 0.6rem;color:var(--ink)">How to exit Mode 0</h3>
+          <table class="pin-table" aria-label="Ways to exit Mode 0">
+            <thead><tr><th scope="col">Method</th><th scope="col">How</th><th scope="col">Best for</th></tr></thead>
+            <tbody>
+              <tr><td>Hold a switch</td><td>Hold A1 or A2 for 1.5 s — a short tap still fires the action, only a long hold exits</td><td>Users who entered by double-click</td></tr>
+              <tr><td>RESET</td><td>Press the board's onboard RESET button</td><td>When the board is reachable</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="font-family:var(--ff-mono);font-size:var(--text-base);margin:1.25rem 0 0.6rem;color:var(--ink)">Supported action types</h3>
+          <table class="pin-table" aria-label="Mode 0 action types">
+            <thead><tr><th scope="col">Type</th><th scope="col">What it does</th><th scope="col">Example</th></tr></thead>
+            <tbody>
+              <tr><td>Keyboard key</td><td>Press (and release) any key or key combo</td><td>Enter, Tab, Ctrl+C, Cmd+Space</td></tr>
+              <tr><td>Mouse click</td><td>Left, right, or middle button click</td><td>Left click for activation</td></tr>
+              <tr><td>Mouse scroll</td><td>Scroll up or down by N ticks per press</td><td>Scroll down a page</td></tr>
+              <tr><td>Mouse move</td><td>Move pointer by X/Y pixels per press</td><td>Nudge cursor right</td></tr>
+              <tr><td>Media control</td><td>Play/pause, volume, track skip, mute, brightness</td><td>Play/pause music</td></tr>
+            </tbody>
+          </table>
+
+          <div class="callout info" role="note" style="margin-top:1.1rem">
+            <span class="callout-icon" aria-hidden="true">ℹ</span>
+            <span>Customise both switch actions in the <a href="blockly_shortcut_configurator.html">Shortcut Configurator</a> under <strong>Mode 0 — Direct Switch Actions</strong>, then download and drop the generated <code>config.py</code> onto your device.</span>
           </div>
         </div>
       </section>

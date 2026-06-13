@@ -552,6 +552,63 @@
 
   .idx { font-size: var(--text-xs); color: var(--cfg-muted); text-align: center; }
   .section-divider { grid-column: 1/-1; border: none; border-top: 1.5px solid var(--cfg-border); margin: 0.3rem 0; }
+
+  /* ── MODE 0 PANEL ── */
+  .mode0-panel { grid-column: 1 / -1; }
+  .mode0-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 680px) { .mode0-grid { grid-template-columns: 1fr; } }
+  .mode0-switch-card {
+    border: 1.5px solid var(--cfg-border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    background: var(--cfg-surface);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .mode0-switch-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--cfg-text);
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .mode0-pin-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: #007060;
+    color: #fff;
+    letter-spacing: 0.06em;
+    font-family: var(--ff-mono);
+  }
+  .mode0-type-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .mode0-type-row label { font-size: var(--text-xs); color: var(--cfg-label); min-width: 70px; }
+  .mode0-type-row select, .mode0-type-row input { font-size: var(--text-xs); padding: 4px 8px; }
+  .mode0-subfields { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.2rem; }
+  .mode0-note {
+    font-size: var(--text-xs);
+    color: var(--cfg-muted);
+    line-height: 1.6;
+    grid-column: 1 / -1;
+    padding: 0.7rem 1rem;
+    background: var(--cfg-surface);
+    border: 1px solid var(--cfg-border);
+    border-radius: 4px;
+  }
+  .mode0-note code { background: var(--cfg-card); padding: 1px 5px; border-radius: 2px; font-size: 0.85em; }
 </style>
 </head>
 <body>
@@ -629,6 +686,99 @@
         </div>
       </div>
     </div>
+
+    <!-- ── MODE 0: DIRECT SWITCH ── -->
+    <hr class="section-divider">
+    <div class="panel mode0-panel">
+      <div class="panel-header"><span class="dot" style="background:#007060" aria-hidden="true"></span>Mode 0 — Direct Switch Actions <span class="badge" style="background:#007060">D0 / double-click</span></div>
+      <div class="panel-body">
+        <p style="font-size:var(--text-sm);color:var(--cfg-muted);margin-bottom:1rem;line-height:1.65">
+          Mode 0 maps each external switch to a single, immediate action — no scanning required.
+          Enter this mode by pressing <strong>D0</strong> on the board, or by <strong>double-clicking</strong> either external switch at the mode-select screen.
+          Configure the action for each switch below; supports keyboard keys, mouse controls, and media keys.
+        </p>
+        <div class="mode0-grid">
+
+          <!-- Switch 1 — A1 -->
+          <div class="mode0-switch-card">
+            <div class="mode0-switch-title">
+              Switch 1 <span class="mode0-pin-badge">A1</span>
+            </div>
+            <div class="mode0-type-row">
+              <label for="sw1-type">Action type</label>
+              <select id="sw1-type" class="key-select" onchange="updateMode0Fields(1)">
+                <option value="key">Keyboard key</option>
+                <option value="mouse_click">Mouse click</option>
+                <option value="mouse_scroll">Mouse scroll</option>
+                <option value="mouse_move">Mouse move</option>
+                <option value="media">Media / consumer</option>
+              </select>
+            </div>
+            <div class="mode0-subfields" id="sw1-fields">
+              <!-- rendered by updateMode0Fields(1) -->
+            </div>
+            <div class="mode0-type-row">
+              <label for="sw1-label">Label</label>
+              <input type="text" id="sw1-label" class="symbol-input" style="width:90px" maxlength="20" value="Enter" data-auto="true" oninput="markMode0Manual(this)" aria-label="Switch 1 display label">
+              <label for="sw1-symbol" style="margin-left:0.5rem">TFT symbol</label>
+              <input type="text" id="sw1-symbol" class="symbol-input" style="width:48px" maxlength="3" value="ENT" data-auto="true" oninput="markMode0Manual(this)" aria-label="Switch 1 TFT symbol (1-3 chars)">
+            </div>
+          </div>
+
+          <!-- Switch 2 — A2 -->
+          <div class="mode0-switch-card">
+            <div class="mode0-switch-title">
+              Switch 2 <span class="mode0-pin-badge">A2</span>
+            </div>
+            <div class="mode0-type-row">
+              <label for="sw2-type">Action type</label>
+              <select id="sw2-type" class="key-select" onchange="updateMode0Fields(2)">
+                <option value="key">Keyboard key</option>
+                <option value="mouse_click">Mouse click</option>
+                <option value="mouse_scroll">Mouse scroll</option>
+                <option value="mouse_move">Mouse move</option>
+                <option value="media">Media / consumer</option>
+              </select>
+            </div>
+            <div class="mode0-subfields" id="sw2-fields">
+              <!-- rendered by updateMode0Fields(2) -->
+            </div>
+            <div class="mode0-type-row">
+              <label for="sw2-label">Label</label>
+              <input type="text" id="sw2-label" class="symbol-input" style="width:90px" maxlength="20" value="Tab" data-auto="true" oninput="markMode0Manual(this)" aria-label="Switch 2 display label">
+              <label for="sw2-symbol" style="margin-left:0.5rem">TFT symbol</label>
+              <input type="text" id="sw2-symbol" class="symbol-input" style="width:48px" maxlength="3" value="TAB" data-auto="true" oninput="markMode0Manual(this)" aria-label="Switch 2 TFT symbol (1-3 chars)">
+            </div>
+          </div>
+
+          <p class="mode0-note">
+            <strong>Two-step setup:</strong> pick an <em>action type</em> first, then a second dropdown appears with the specific controls for that type.
+            The <strong>Label</strong> and <strong>TFT symbol</strong> auto-fill to match your choice — edit either one to override it (your edit then sticks).
+            <strong>Keyboard:</strong> optional modifier + key. <strong>Mouse click:</strong> left / right / middle.
+            <strong>Mouse scroll:</strong> ticks up or down. <strong>Mouse move:</strong> X/Y pixels per press.
+            <strong>Media:</strong> play/pause, volume, track skip, mute, brightness — requires <code>adafruit_hid</code> ≥ 6.0.
+            Keep the TFT symbol to 1–3 plain characters (the onboard display does not render emoji — see note below).
+          </p>
+        </div>
+
+        <!-- Mode 0 timing (double-click window, switch hold to exit) -->
+        <div class="timing-grid" style="margin-top:1rem">
+          <div class="field-row">
+            <label for="dbl_click_window">Double-click window (seconds)</label>
+            <input type="number" id="dbl_click_window" value="0.4" step="0.05" min="0.1"
+                   aria-describedby="hint-dbl">
+            <span id="hint-dbl" class="sr-only">Max gap in seconds between two clicks to register as a double-click and enter Mode 0</span>
+          </div>
+          <div class="field-row">
+            <label for="switch_hold_exit">Switch hold to exit (seconds)</label>
+            <input type="number" id="switch_hold_exit" value="1.5" step="0.1" min="0.3"
+                   aria-describedby="hint-swhold">
+            <span id="hint-swhold" class="sr-only">How long to hold an external switch in Mode 0 to return to the mode-select screen. To leave single- or two-switch mode, press the board's RESET button.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="section-divider">
 
     <!-- ── BLOCKLY REFERENCE TABLE ── -->
     <div class="panel full-width">
@@ -768,6 +918,253 @@
 </main>
 
 <script>
+// ── MODE 0 FIELD RENDERER ─────────────────────────────────────────────────
+// Each control type has a list of options. Every option carries:
+//   value  — the CircuitPython identifier
+//   text   — what shows in the dropdown
+//   label  — suggested display label (auto-fills the Label field)
+//   symbol — suggested 1-3 char TFT symbol (auto-fills the Symbol field)
+
+const MODE0_KEY_LIST = [
+  { value:'ENTER',       text:'Enter',        label:'Enter',   symbol:'ENT' },
+  { value:'TAB',         text:'Tab',          label:'Tab',     symbol:'TAB' },
+  { value:'SPACE',       text:'Space',        label:'Space',   symbol:'SPC' },
+  { value:'BACKSPACE',   text:'Backspace',    label:'Backsp',  symbol:'BSP' },
+  { value:'DELETE',      text:'Delete',       label:'Delete',  symbol:'DEL' },
+  { value:'ESCAPE',      text:'Escape',       label:'Esc',     symbol:'ESC' },
+  { value:'RIGHT_ARROW', text:'Arrow Right',  label:'Right',   symbol:'R' },
+  { value:'LEFT_ARROW',  text:'Arrow Left',   label:'Left',    symbol:'L' },
+  { value:'UP_ARROW',    text:'Arrow Up',     label:'Up',      symbol:'U' },
+  { value:'DOWN_ARROW',  text:'Arrow Down',   label:'Down',    symbol:'D' },
+  { value:'PAGE_UP',     text:'Page Up',      label:'PgUp',    symbol:'PU' },
+  { value:'PAGE_DOWN',   text:'Page Down',    label:'PgDn',    symbol:'PD' },
+  { value:'HOME',        text:'Home',         label:'Home',    symbol:'HOM' },
+  { value:'END',         text:'End',          label:'End',     symbol:'END' },
+];
+// Letters A-Z
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(c => {
+  MODE0_KEY_LIST.push({ value:c, text:'Letter ' + c, label:c, symbol:c, group:'Letters' });
+});
+// Numbers 1-0
+[['ONE','1'],['TWO','2'],['THREE','3'],['FOUR','4'],['FIVE','5'],
+ ['SIX','6'],['SEVEN','7'],['EIGHT','8'],['NINE','9'],['ZERO','0']].forEach(n => {
+  MODE0_KEY_LIST.push({ value:n[0], text:'Number ' + n[1], label:n[1], symbol:n[1], group:'Numbers' });
+});
+// Function keys F1-F12
+for (let i = 1; i <= 12; i++) {
+  MODE0_KEY_LIST.push({ value:'F'+i, text:'F'+i, label:'F'+i, symbol:'F'+i, group:'Function Keys' });
+}
+
+const MODE0_MOD_LIST = [
+  { value:'',                       text:'— none —' },
+  { value:'LEFT_CONTROL',           text:'Ctrl' },
+  { value:'LEFT_SHIFT',             text:'Shift' },
+  { value:'LEFT_ALT',               text:'Alt' },
+  { value:'LEFT_GUI',               text:'Cmd / Win' },
+  { value:'LEFT_CONTROL,LEFT_SHIFT',text:'Ctrl + Shift' },
+  { value:'LEFT_CONTROL,LEFT_ALT',  text:'Ctrl + Alt' },
+  { value:'LEFT_GUI,LEFT_SHIFT',    text:'Cmd + Shift' },
+];
+
+const MODE0_MOUSE_BTN_LIST = [
+  { value:'LEFT_BUTTON',   text:'Left button',   label:'L Click', symbol:'LMB' },
+  { value:'RIGHT_BUTTON',  text:'Right button',  label:'R Click', symbol:'RMB' },
+  { value:'MIDDLE_BUTTON', text:'Middle button', label:'M Click', symbol:'MMB' },
+];
+
+const MODE0_MEDIA_LIST = [
+  { value:'PLAY_PAUSE',           text:'Play / Pause',     label:'Play',     symbol:'>||' },
+  { value:'VOLUME_INCREMENT',     text:'Volume Up',        label:'Vol +',    symbol:'V+' },
+  { value:'VOLUME_DECREMENT',     text:'Volume Down',      label:'Vol -',    symbol:'V-' },
+  { value:'MUTE',                 text:'Mute',             label:'Mute',     symbol:'MUT' },
+  { value:'SCAN_NEXT_TRACK',      text:'Next Track',       label:'Next',     symbol:'>>' },
+  { value:'SCAN_PREVIOUS_TRACK',  text:'Previous Track',   label:'Prev',     symbol:'<<' },
+  { value:'STOP',                 text:'Stop',             label:'Stop',     symbol:'[]' },
+  { value:'FAST_FORWARD',         text:'Fast Forward',     label:'FFwd',     symbol:'FF' },
+  { value:'REWIND',               text:'Rewind',           label:'Rew',      symbol:'RW' },
+  { value:'BRIGHTNESS_INCREMENT', text:'Brightness Up',    label:'Brt +',    symbol:'B+' },
+  { value:'BRIGHTNESS_DECREMENT', text:'Brightness Down',  label:'Brt -',    symbol:'B-' },
+];
+
+// Build <option> / <optgroup> markup from a list, marking `selValue` selected.
+function buildOptions(list, selValue) {
+  let out = '';
+  let openGroup = null;
+  list.forEach(o => {
+    if (o.group && o.group !== openGroup) {
+      if (openGroup) out += '</optgroup>';
+      out += '<optgroup label="' + o.group + '">';
+      openGroup = o.group;
+    } else if (!o.group && openGroup) {
+      out += '</optgroup>';
+      openGroup = null;
+    }
+    const sel = (o.value === selValue) ? ' selected' : '';
+    out += '<option value="' + o.value + '"' + sel + '>' + o.text + '</option>';
+  });
+  if (openGroup) out += '</optgroup>';
+  return out;
+}
+
+// Default secondary selection per switch & type
+function defaultControlFor(sw, type) {
+  if (type === 'key')         return sw === 1 ? 'ENTER' : 'TAB';
+  if (type === 'mouse_click') return 'LEFT_BUTTON';
+  if (type === 'media')       return 'PLAY_PAUSE';
+  return '';
+}
+
+// Render the secondary (dependent) dropdown once a type is chosen.
+function updateMode0Fields(sw) {
+  const type = document.getElementById('sw' + sw + '-type').value;
+  const container = document.getElementById('sw' + sw + '-fields');
+  let html = '';
+
+  if (type === 'key') {
+    const defKey = defaultControlFor(sw, 'key');
+    html =
+      '<div class="mode0-type-row">' +
+        '<label for="sw' + sw + '-mod">Modifier</label>' +
+        '<select id="sw' + sw + '-mod" class="key-select" onchange="suggestMode0Display(' + sw + ')">' +
+          buildOptions(MODE0_MOD_LIST, '') +
+        '</select>' +
+      '</div>' +
+      '<div class="mode0-type-row">' +
+        '<label for="sw' + sw + '-key">Key</label>' +
+        '<select id="sw' + sw + '-key" class="key-select" onchange="suggestMode0Display(' + sw + ')">' +
+          buildOptions(MODE0_KEY_LIST, defKey) +
+        '</select>' +
+      '</div>';
+  } else if (type === 'mouse_click') {
+    html =
+      '<div class="mode0-type-row">' +
+        '<label for="sw' + sw + '-mbtn">Button</label>' +
+        '<select id="sw' + sw + '-mbtn" class="key-select" onchange="suggestMode0Display(' + sw + ')">' +
+          buildOptions(MODE0_MOUSE_BTN_LIST, 'LEFT_BUTTON') +
+        '</select>' +
+      '</div>';
+  } else if (type === 'mouse_scroll') {
+    html =
+      '<div class="mode0-type-row">' +
+        '<label for="sw' + sw + '-scroll">Scroll ticks</label>' +
+        '<input type="number" id="sw' + sw + '-scroll" class="key-select" value="1" min="-10" max="10" step="1" style="width:70px" onchange="suggestMode0Display(' + sw + ')">' +
+        '<span style="font-size:var(--text-xs);color:var(--cfg-muted)">(positive = up)</span>' +
+      '</div>';
+  } else if (type === 'mouse_move') {
+    html =
+      '<div class="mode0-type-row">' +
+        '<label>Move X</label>' +
+        '<input type="number" id="sw' + sw + '-movex" class="key-select" value="0" min="-100" max="100" step="1" style="width:70px" onchange="suggestMode0Display(' + sw + ')">' +
+        '<label style="margin-left:0.5rem">Y</label>' +
+        '<input type="number" id="sw' + sw + '-movey" class="key-select" value="0" min="-100" max="100" step="1" style="width:70px" onchange="suggestMode0Display(' + sw + ')">' +
+      '</div>';
+  } else if (type === 'media') {
+    html =
+      '<div class="mode0-type-row">' +
+        '<label for="sw' + sw + '-media">Control</label>' +
+        '<select id="sw' + sw + '-media" class="key-select" onchange="suggestMode0Display(' + sw + ')">' +
+          buildOptions(MODE0_MEDIA_LIST, 'PLAY_PAUSE') +
+        '</select>' +
+      '</div>';
+  }
+
+  container.innerHTML = html;
+  // Auto-fill the display label & symbol to match the new selection.
+  suggestMode0Display(sw);
+}
+
+// Look up the suggested label/symbol for the current secondary selection
+// and write them into the Label / Symbol fields.
+function suggestMode0Display(sw) {
+  const type = document.getElementById('sw' + sw + '-type').value;
+  const labelEl  = document.getElementById('sw' + sw + '-label');
+  const symbolEl = document.getElementById('sw' + sw + '-symbol');
+  let suggestion = null;
+
+  if (type === 'key') {
+    const key = document.getElementById('sw' + sw + '-key')?.value;
+    const mod = document.getElementById('sw' + sw + '-mod')?.value || '';
+    const base = MODE0_KEY_LIST.find(o => o.value === key);
+    if (base) {
+      const modText = MODE0_MOD_LIST.find(m => m.value === mod);
+      const modPrefix = (mod && modText) ? modText.text + '+' : '';
+      suggestion = {
+        label: modPrefix + base.label,
+        symbol: base.symbol
+      };
+    }
+  } else if (type === 'mouse_click') {
+    const btn = document.getElementById('sw' + sw + '-mbtn')?.value;
+    suggestion = MODE0_MOUSE_BTN_LIST.find(o => o.value === btn);
+  } else if (type === 'mouse_scroll') {
+    const y = parseInt(document.getElementById('sw' + sw + '-scroll')?.value || '1');
+    suggestion = { label: 'Scroll ' + (y >= 0 ? 'Up' : 'Dn'), symbol: y >= 0 ? 'SUp' : 'SDn' };
+  } else if (type === 'mouse_move') {
+    const x = parseInt(document.getElementById('sw' + sw + '-movex')?.value || '0');
+    const y = parseInt(document.getElementById('sw' + sw + '-movey')?.value || '0');
+    suggestion = { label: 'Move ' + x + ',' + y, symbol: 'MOV' };
+  } else if (type === 'media') {
+    const code = document.getElementById('sw' + sw + '-media')?.value;
+    suggestion = MODE0_MEDIA_LIST.find(o => o.value === code);
+  }
+
+  if (suggestion) {
+    // Only overwrite if the field hasn't been manually customised, OR
+    // if it still holds a previous auto-suggestion. We track this with a flag.
+    if (labelEl.dataset.auto !== 'false') {
+      labelEl.value = suggestion.label;
+      labelEl.dataset.auto = 'true';
+    }
+    if (symbolEl.dataset.auto !== 'false') {
+      symbolEl.value = (suggestion.symbol || '?').slice(0, 3);
+      symbolEl.dataset.auto = 'true';
+    }
+  }
+}
+
+// Mark a display field as manually edited so auto-suggest stops overwriting it.
+function markMode0Manual(el) { el.dataset.auto = 'false'; }
+
+function getMode0ActionPy(sw) {
+  const type = document.getElementById('sw' + sw + '-type').value;
+
+  if (type === 'key') {
+    const mod  = document.getElementById('sw' + sw + '-mod')?.value || '';
+    const key  = document.getElementById('sw' + sw + '-key')?.value || 'ENTER';
+    const mods = mod ? mod.split(',') : [];
+    const keys = mods.concat([key]).map(k => 'Keycode.' + k).join(', ');
+    return '{"type": "key", "keys": [' + keys + ']}';
+  }
+  if (type === 'mouse_click') {
+    const btn = document.getElementById('sw' + sw + '-mbtn')?.value || 'LEFT_BUTTON';
+    return '{"type": "mouse_click", "button": Mouse.' + btn + '}';
+  }
+  if (type === 'mouse_scroll') {
+    const y = parseInt(document.getElementById('sw' + sw + '-scroll')?.value || '1');
+    return '{"type": "mouse_scroll", "y": ' + y + '}';
+  }
+  if (type === 'mouse_move') {
+    const x = parseInt(document.getElementById('sw' + sw + '-movex')?.value || '0');
+    const y = parseInt(document.getElementById('sw' + sw + '-movey')?.value || '0');
+    return '{"type": "mouse_move", "x": ' + x + ', "y": ' + y + '}';
+  }
+  if (type === 'media') {
+    const code = document.getElementById('sw' + sw + '-media')?.value || 'PLAY_PAUSE';
+    return '{"type": "media", "code": ConsumerControlCode.' + code + '}';
+  }
+  return '{"type": "key", "keys": [Keycode.ENTER]}';
+}
+
+function needsMouse() {
+  return ['mouse_click','mouse_scroll','mouse_move'].includes(document.getElementById('sw1-type').value) ||
+         ['mouse_click','mouse_scroll','mouse_move'].includes(document.getElementById('sw2-type').value);
+}
+
+function needsConsumer() {
+  return document.getElementById('sw1-type').value === 'media' ||
+         document.getElementById('sw2-type').value === 'media';
+}
+
 // ── BLOCKLY SHORTCUT DATA ──────────────────────────────────────────────────
 const BLOCKLY_SHORTCUTS = [
   { fn:"Move forward",     mac:{label:"tab",           kc:["TAB"]},                                win:{label:"tab",            kc:["TAB"]} },
@@ -802,7 +1199,7 @@ const BLOCKLY_SHORTCUTS = [
 
 // ── DEFAULT ACTIVE SHORTCUTS ──────────────────────────────────────────────
 let shortcuts = [
-  { label:"tab",         kc:["TAB"],         symbol:"→", custom:false },
+  { label:"tab",         kc:["TAB"],         symbol:"TAB", custom:false },
   { label:"arrow right", kc:["RIGHT_ARROW"], symbol:"R", custom:false },
   { label:"arrow down",  kc:["DOWN_ARROW"],  symbol:"D", custom:false },
   { label:"enter",       kc:["ENTER"],       symbol:"e", custom:false },
@@ -1058,11 +1455,23 @@ function generateConfig() {
   const scan       = parseFloat(document.getElementById('scan_interval').value)   || 1.0;
   const shortPress = parseFloat(document.getElementById('max_short_press').value) || 0.5;
   const debounce   = parseFloat(document.getElementById('debounce').value)        || 0.1;
+  const dblClick   = parseFloat(document.getElementById('dbl_click_window').value) || 0.4;
+  const swHold     = parseFloat(document.getElementById('switch_hold_exit').value) || 1.5;
 
   if (!shortcuts.length) { setStatus('err','⚠ Add at least one shortcut first.'); return; }
 
   const osLabel = currentOS === 'mac' ? 'macOS' : 'Windows';
   const ts      = new Date().toISOString().replace('T',' ').split('.')[0] + ' UTC';
+
+  const sw1Action = getMode0ActionPy(1);
+  const sw2Action = getMode0ActionPy(2);
+  const sw1Label  = (document.getElementById('sw1-label').value || 'Enter').replace(/"/g,'\\"');
+  const sw2Label  = (document.getElementById('sw2-label').value || 'Tab').replace(/"/g,'\\"');
+  const sw1Symbol = (document.getElementById('sw1-symbol').value || '⏎').replace(/"/g,'\\"');
+  const sw2Symbol = (document.getElementById('sw2-symbol').value || '⇥').replace(/"/g,'\\"');
+
+  const mouseImport    = needsMouse()    ? '\nfrom adafruit_hid.mouse import Mouse' : '';
+  const consumerImport = needsConsumer() ? '\nfrom adafruit_hid.consumer_control import ConsumerControl\nfrom adafruit_hid.consumer_control_code import ConsumerControlCode' : '';
 
   const kcLines  = shortcuts.map(sc => {
     const codes = sc.kc.map(k => `Keycode.${k}`).join(', ');
@@ -1099,12 +1508,35 @@ MAX_SHORT_PRESS_SECS = ${shortPress.toFixed(2)}
 
 DEBOUNCE_TIME = ${debounce.toFixed(2)}
 
+# ── MODE 0 TIMING ────────────────────────────────────
+
+DOUBLE_CLICK_WINDOW   = ${dblClick.toFixed(2)}
+SWITCH_HOLD_EXIT_SECS = ${swHold.toFixed(2)}
+
+# ── MODE 0: DIRECT SWITCH ACTIONS ────────────────────
+# SWITCH1_ACTION = A1 press,  SWITCH2_ACTION = A2 press
+# Types: key | mouse_click | mouse_scroll | mouse_move | media
+#
+# Examples:
+#   {"type": "key",          "keys": [Keycode.ENTER]}
+#   {"type": "mouse_click",  "button": Mouse.LEFT_BUTTON}
+#   {"type": "mouse_scroll", "y": 1}
+#   {"type": "media",        "code": ConsumerControlCode.PLAY_PAUSE}
+
+from adafruit_hid.keycode import Keycode${mouseImport}${consumerImport}
+
+SWITCH1_ACTION = ${sw1Action}
+SWITCH2_ACTION = ${sw2Action}
+
+SWITCH1_LABEL  = "${sw1Label}"
+SWITCH2_LABEL  = "${sw2Label}"
+SWITCH1_SYMBOL = "${sw1Symbol}"
+SWITCH2_SYMBOL = "${sw2Symbol}"
+
 # ── KEYBOARD SHORTCUTS (${osLabel}) ──────────────────
 # Order = scan / navigation sequence.
 # Multi-key combos: list modifiers first.
 # e.g. ("cmd+z", [Keycode.LEFT_GUI, Keycode.Z])
-
-from adafruit_hid.keycode import Keycode
 
 KEYCODES = [
 ${kcLines}
@@ -1147,6 +1579,8 @@ function setStatus(type, msg) {
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderRefTable();
 renderList(null);
+updateMode0Fields(1);
+updateMode0Fields(2);
 </script>
 </main>
 </body>
